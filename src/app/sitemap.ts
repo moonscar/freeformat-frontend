@@ -1,11 +1,17 @@
-export default async function sitemap() {
-  const baseUrl = 'https://your-domain.com';
+import type { MetadataRoute } from 'next';
+import { siteConfig } from '@/lib/siteConfig';
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
+  const staticRoutes = ['', '/templates'];
 
-  const routes = ['', '/templates'].flatMap((path) =>
-    locales.map((l) => ({ url: `${baseUrl}/${l}${path}`, changefreq: 'weekly', priority: 0.8 }))
+  return staticRoutes.flatMap((path) =>
+    locales.map((locale) => ({
+      url: `${baseUrl}/${locale}${path}`,
+      changefreq: 'weekly',
+      priority: path === '' ? 1 : 0.7,
+      lastModified: new Date(),
+    }))
   );
-
-  return routes;
 }
-
