@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import InlineRequestForm from '@/components/InlineRequestForm';
 
+const REQUEST_EMAIL = process.env.NEXT_PUBLIC_REQUEST_EMAIL || 'hello@ai-formatter.com';
+
 export default function Page({ params }: { params: { locale: string } }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';
   const t = locale === 'en' ? en : zh;
@@ -40,6 +42,7 @@ export default function Page({ params }: { params: { locale: string } }) {
       <section id="request" className="mt-12">
         <InlineRequestForm
           locale={locale}
+          targetEmail={REQUEST_EMAIL}
           title={t.inline.title}
           desc={t.inline.desc}
           submitText={t.inline.submit}
@@ -125,10 +128,10 @@ const zh = {
   },
   inline: {
     title: '在线提交你的格式要求（无需跳转）',
-    desc: '填写基本信息并粘贴格式要求原文，我们会优先适配热门格式，完成后通知你。',
-    submit: '提交格式要求',
-    success: '提交成功，已生成临时模板 ID',
-    apiHint: '提交后由后端 /guideline 生成 TemplateJSON（MVP）',
+    desc: '填写核心信息后点击提交，我们会帮你自动生成邮件草稿并打开邮箱。',
+    submit: '生成邮件草稿',
+    success: `已打开邮件客户端，如未弹出请手动发送至 ${REQUEST_EMAIL}`,
+    apiHint: `目标邮箱：${REQUEST_EMAIL}`,
   },
 };
 
@@ -155,9 +158,9 @@ const en = {
   },
   inline: {
     title: 'Submit your guideline inline (no redirect)',
-    desc: 'Fill basic info and paste the spec. We prioritize popular formats and notify you later.',
-    submit: 'Submit guideline',
-    success: 'Submitted. Temporary template ID',
-    apiHint: 'Calls backend /guideline to build TemplateJSON (MVP)',
+    desc: 'Fill in the essentials, click submit, and we will open your mail app with a prefilled draft.',
+    submit: 'Open email draft',
+    success: `Mail composer opened. Send it to ${REQUEST_EMAIL}`,
+    apiHint: `Target email: ${REQUEST_EMAIL}`,
   },
 };

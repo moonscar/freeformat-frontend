@@ -10,10 +10,10 @@ type Props = {
   successText: string;
   apiHint: string;
   locale: Locale;
+  targetEmail: string;
 };
 
-export default function InlineRequestForm({ title, desc, submitText, successText, apiHint, locale }: Props) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+export default function InlineRequestForm({ title, desc, submitText, successText, apiHint, locale, targetEmail }: Props) {
   const [org, setOrg] = useState("");
   const [link, setLink] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -42,9 +42,20 @@ export default function InlineRequestForm({ title, desc, submitText, successText
           specialPlaceholder: 'Special notes (optional)',
           successSeparator: ': ',
           errorPrefix: 'Submit failed',
-          defaultResult: 'Received',
+          defaultResult: 'Email opened',
           loadingText: 'Submitting…',
           fallbackName: 'User guideline submission',
+          subjectPrefix: 'Formatting guideline - ',
+          subjectFallback: 'Unknown organization',
+          compose: {
+            org: 'Organization: ',
+            link: 'Guideline link / attachment: ',
+            doc: 'Doc type / pages / deadline: ',
+            special: 'Special notes: ',
+            contact: 'Contact: ',
+            rawPrefix: 'Guideline:\n',
+          },
+          mailError: 'Unable to open email client. Please copy and send manually.',
         }
       : {
           requirementLabel: '格式要求原文（必填）',
@@ -61,25 +72,37 @@ export default function InlineRequestForm({ title, desc, submitText, successText
           specialPlaceholder: '特殊要求或备注（选填）',
           successSeparator: '：',
           errorPrefix: '提交失败',
-          defaultResult: '已接收',
+          defaultResult: '已打开邮件',
           loadingText: '提交中…',
           fallbackName: '用户上传格式要求',
+          subjectPrefix: '格式要求 - ',
+          subjectFallback: '未填写机构',
+          compose: {
+            org: '【学校/院系/期刊】',
+            link: '【格式要求链接/附件】',
+            doc: '【文档类型/页数/DDL】',
+            special: '【特殊要求】',
+            contact: '【联系方式】',
+            rawPrefix: '【格式要求原文】\n',
+          },
+          mailError: '无法唤起邮箱，请手动复制内容发送。',
         };
   const fieldClass =
     "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 focus:outline-none transition";
   const labelClass = "space-y-2 text-sm font-medium text-slate-700";
 
   const composedText = useMemo(() => {
+    const docInfo = [pages, deadline].filter(Boolean).join(' / ');
     const lines = [
-      `【学校/院系/期刊】${org}`,
-      `【格式要求链接/附件】${link}`,
-      `【文档类型/页数/DDL】${pages} / ${deadline}`,
-      `【特殊要求】${special}`,
-      `【联系方式】${contact}`,
-      raw ? "【格式要求原文】\n" + raw : "",
+      org && `${copy.compose.org}${org}`,
+      link && `${copy.compose.link}${link}`,
+      docInfo && `${copy.compose.doc}${docInfo}`,
+      special && `${copy.compose.special}${special}`,
+      contact && `${copy.compose.contact}${contact}`,
+      raw && `${copy.compose.rawPrefix}${raw}`,
     ].filter(Boolean);
     return lines.join("\n");
-  }, [org, link, pages, deadline, special, contact, raw]);
+  }, [org, link, pages, deadline, special, contact, raw, locale]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -87,19 +110,20 @@ export default function InlineRequestForm({ title, desc, submitText, successText
     setError(null);
     setResult(null);
     try {
-      const res = await fetch(`${API_BASE}/guideline`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: composedText, name: org || copy.fallbackName }),
-      });
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || `请求失败：${res.status}`);
+      const subject = `${copy.subjectPrefix}${org || copy.subjectFallback}`;
+      const body = composedText || copy.compose.rawPrefix;
+      const mailto = `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      if (typeof window !== 'undefined') {
+        window.location.href = mailto;
       }
-      const data = await res.json();
-      setResult(data.template_id || copy.defaultResult);
+      try {
+        await navigator.clipboard?.writeText(body);
+      } catch {
+        // ignore clipboard errors
+      }
+      setResult(targetEmail);
     } catch (err: any) {
-      setError(err?.message || copy.errorPrefix);
+      setError(err?.message || copy.mailError);
     } finally {
       setLoading(false);
     }
