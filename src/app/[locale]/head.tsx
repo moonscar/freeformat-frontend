@@ -1,16 +1,17 @@
 import { siteConfig } from '@/lib/siteConfig';
 
 export default function Head({ params }: { params: { locale: string } }) {
-  const locale = params.locale === 'en' ? 'en-US' : 'zh-CN';
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const localeConfig = siteConfig.locales[localeKey];
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: siteConfig.name,
-    description: siteConfig.description,
+    name: localeConfig.title,
+    description: localeConfig.description,
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
-    inLanguage: locale,
-    url: siteConfig.url,
+    inLanguage: localeConfig.schemaLang,
+    url: `${siteConfig.url}/${localeKey}`,
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -18,7 +19,7 @@ export default function Head({ params }: { params: { locale: string } }) {
     },
     creator: {
       '@type': 'Organization',
-      name: siteConfig.name,
+      name: 'AI Formatter',
       email: siteConfig.contactEmail,
     },
   };
