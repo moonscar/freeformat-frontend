@@ -2,7 +2,8 @@ import Link from 'next/link';
 import InlineRequestForm from '@/components/InlineRequestForm';
 
 export default function Page({ params }: { params: { locale: string } }) {
-  const t = params.locale === 'en' ? en : zh;
+  const locale = params.locale === 'en' ? 'en' : 'zh';
+  const t = locale === 'en' ? en : zh;
   return (
     <main className="relative mx-auto max-w-6xl px-4 py-16 text-slate-900">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -38,6 +39,7 @@ export default function Page({ params }: { params: { locale: string } }) {
       {/* Primary CTA: Inline requirement submission (no email client) */}
       <section id="request" className="mt-12">
         <InlineRequestForm
+          locale={locale}
           title={t.inline.title}
           desc={t.inline.desc}
           submitText={t.inline.submit}
