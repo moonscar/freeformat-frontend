@@ -18,17 +18,19 @@ npm run dev   # http://localhost:3000
 - `src/app/robots.ts`、`src/app/sitemap.ts`：SEO 基础
 - `src/components`：上传与模板相关组件（占位，待接后端）
 
-## Todo
-- [x] 调整落地页配色与提交流程，让用户快速填写核心信息
-- [x] 部署落地页至 Vercel 并验证核心路径
-- [x] 接入分析（Umami/GA4 可选）、配置 metadata/robots/sitemap
-- [x] 完成 ESLint/Prettier 初始化，确保 `npm run lint` 可直接运行
-- [ ] 根据获客反馈评估并排期下一波开发计划（下列任务待排序）
-- [ ] 将上传与格式化流程接入后端 API（FastAPI）
-- [ ] 引入模板数据源（静态/MDX 或 API）
-- [ ] 打磨 UI，补充前后对比、FAQ、隐私页面
+> 详细待办维护在 `../docs/frontend_todolist.md`。
 
 ## SEO & 分析配置
 1. 复制 `.env.example` 为 `.env.local`，填写 `NEXT_PUBLIC_SITE_URL`、`NEXT_PUBLIC_REQUEST_EMAIL` 以及可选的 Umami/GA4 变量。
 2. 重新部署后，`metadataBase`、`robots` 与 `sitemap` 会根据该域名自动生成正确链接。
 3. 若设置 `NEXT_PUBLIC_UMAMI_*` 或 `NEXT_PUBLIC_GA_ID`，Analytics 组件会自动注入对应脚本，无需额外改动代码。
+
+## 今日进展
+- ✅ 落地页完成浅色视觉与交互打磨，Hero/价值块统一配色
+- ✅ 在线表单改为生成邮件草稿，支持中英文文案 & 邮箱配置
+- ✅ SEO 元信息/JSON-LD 本地化，接入 Umami/GA4（可配）
+- ✅ 前后端 Todo 梳理完毕，锁定下一阶段重点
+
+## 明日计划
+1. 前端：搭建 FAQ/案例页面，准备 5-7 个高频问题（中/英）
+2. 后端：开工 Guideline API MVP，定义 Schema + 示例响应

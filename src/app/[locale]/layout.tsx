@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
       template: `%s | ${localeConfig.title}`,
     },
     description: localeConfig.description,
-    keywords: localeConfig.keywords,
+    keywords: Array.from(localeConfig.keywords),
     alternates: {
       canonical: `/${localeKey}`,
       languages: languageAlternates,
