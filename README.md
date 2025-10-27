@@ -22,6 +22,7 @@ npm run dev   # http://localhost:3000
 
 ## SEO & 分析配置
 1. 复制 `.env.example` 为 `.env.local`，填写 `NEXT_PUBLIC_SITE_URL`、`NEXT_PUBLIC_REQUEST_EMAIL` 以及可选的 Umami/GA4 变量。
+   - 目前默认值指向正式域名 `https://freeformat.app`。
 2. 重新部署后，`metadataBase`、`robots` 与 `sitemap` 会根据该域名自动生成正确链接。
 3. 若设置 `NEXT_PUBLIC_UMAMI_*` 或 `NEXT_PUBLIC_GA_ID`，Analytics 组件会自动注入对应脚本，无需额外改动代码。
 

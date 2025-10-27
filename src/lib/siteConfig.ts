@@ -1,4 +1,4 @@
-const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-formatter.vercel.app';
+const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeformat.app';
 
 export const siteConfig = {
   url: defaultUrl,
