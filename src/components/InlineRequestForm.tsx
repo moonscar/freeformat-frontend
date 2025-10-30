@@ -14,6 +14,7 @@ type Props = {
 };
 
 export default function InlineRequestForm({ title, desc, submitText, successText, apiHint, locale, targetEmail }: Props) {
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '').replace(/\/$/, '') || '/api';
   const [org, setOrg] = useState("");
   const [link, setLink] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -110,18 +111,25 @@ export default function InlineRequestForm({ title, desc, submitText, successText
     setError(null);
     setResult(null);
     try {
-      const subject = `${copy.subjectPrefix}${org || copy.subjectFallback}`;
-      const body = composedText || copy.compose.rawPrefix;
-      const mailto = `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      if (typeof window !== 'undefined') {
-        window.location.href = mailto;
+      const payload = {
+        text: composedText,
+        name: org || (locale === 'en' ? 'User guideline submission' : '用户上传格式要求'),
+        locale,
+        metadata: {
+          link, deadline, pages, special, contact,
+        },
+      };
+      const res = await fetch(`${API_BASE}/guideline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || 'Request failed');
       }
-      try {
-        await navigator.clipboard?.writeText(body);
-      } catch {
-        // ignore clipboard errors
-      }
-      setResult(targetEmail);
+      const data = await res.json();
+      setResult(data.submission_id || (locale === 'en' ? 'submitted' : '已接收'));
     } catch (err: any) {
       setError(err?.message || copy.mailError);
     } finally {

@@ -127,11 +127,11 @@ const zh = {
     privacy: '隐私与使用限制',
   },
   inline: {
-    title: '在线提交你的格式要求（无需跳转）',
-    desc: '填写核心信息后点击提交，我们会帮你自动生成邮件草稿并打开邮箱。',
-    submit: '生成邮件草稿',
-    success: `已打开邮件客户端，如未弹出请手动发送至 ${REQUEST_EMAIL}`,
-    apiHint: `目标邮箱：${REQUEST_EMAIL}`,
+    title: '在线提交你的格式要求（直连后端）',
+    desc: '填写核心信息后点击提交，后端将登记你的格式要求并进入处理队列。',
+    submit: '提交格式要求',
+    success: '提交成功，Submission ID',
+    apiHint: '已提交到后端 /guideline',
   },
 };
 
@@ -157,10 +157,10 @@ const en = {
     privacy: 'Privacy & Usage Limits',
   },
   inline: {
-    title: 'Submit your guideline inline (no redirect)',
-    desc: 'Fill in the essentials, click submit, and we will open your mail app with a prefilled draft.',
-    submit: 'Open email draft',
-    success: `Mail composer opened. Send it to ${REQUEST_EMAIL}`,
-    apiHint: `Target email: ${REQUEST_EMAIL}`,
+    title: 'Submit your guideline (direct to backend)',
+    desc: 'Fill in the essentials and submit. The backend will register your request and queue it for processing.',
+    submit: 'Submit guideline',
+    success: 'Submitted. Submission ID',
+    apiHint: 'POST /guideline (backend)',
   },
 };
