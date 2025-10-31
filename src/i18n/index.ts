@@ -24,6 +24,7 @@ const pages = {
         apiHint: '已提交到后端 /guideline',
       },
       info: {
+        subheads: { overview: '概览', steps: '步骤', cases: '使用场景' },
         what: {
           title: '什么是 AI Formatter？',
           paragraphs: [
@@ -80,6 +81,7 @@ const pages = {
         apiHint: 'POST /guideline (backend)',
       },
       info: {
+        subheads: { overview: 'Overview', steps: 'Steps', cases: 'Use cases' },
         what: {
           title: 'What is AI Formatter?',
           paragraphs: [
