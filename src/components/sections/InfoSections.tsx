@@ -1,6 +1,6 @@
-type WhatData = { title: string; paragraphs: string[] };
-type HowData = { title: string; steps: string[] };
-type UseData = { title: string; items: string[] };
+type WhatData = { title: string; paragraphs: ReadonlyArray<string> };
+type HowData = { title: string; steps: ReadonlyArray<string> };
+type UseData = { title: string; items: ReadonlyArray<string> };
 
 function SectionCard({ children, title, id }: { children: React.ReactNode; title: string; id: string }) {
   return (

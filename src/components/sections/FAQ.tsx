@@ -1,6 +1,6 @@
 export type FAQItem = { q: string; a: string };
 
-export default function FAQ({ title, items }: { title: string; items: FAQItem[] }) {
+export default function FAQ({ title, items }: { title: string; items: ReadonlyArray<FAQItem> }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="rounded-2xl border border-white/60 bg-white/90 p-6 shadow-xl shadow-slate-200/70">
