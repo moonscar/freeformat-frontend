@@ -43,7 +43,7 @@ export default function Page({ params }: { params: { locale: string } }) {
         />
 
         {/* Info sections matching classic tool layout */}
-        <InfoSections what={t.info.what} how={t.info.how} use={t.info.use} />
+        <InfoSections what={t.info.what} how={t.info.how} use={t.info.use} subheads={t.info.subheads} />
         <div id="faq">
           <FAQ title={t.info.faq.title} items={t.info.faq.items} />
         </div>

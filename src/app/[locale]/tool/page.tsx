@@ -35,7 +35,7 @@ export default function ToolPage({ params }: { params: { locale: string } }) {
             { href: '#faq', label: dict.landing.info.faq.title },
           ]}
         />
-        <InfoSections what={dict.landing.info.what} how={dict.landing.info.how} use={dict.landing.info.use} />
+        <InfoSections what={dict.landing.info.what} how={dict.landing.info.how} use={dict.landing.info.use} subheads={dict.landing.info.subheads} />
         <div id="faq">
           <FAQ title={dict.landing.info.faq.title} items={dict.landing.info.faq.items} />
         </div>

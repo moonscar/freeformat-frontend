@@ -15,12 +15,13 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
 }
 
-export default function InfoSections({ what, how, use }: { what: WhatData; how: HowData; use: UseData }) {
+export default function InfoSections({ what, how, use, subheads }: { what: WhatData; how: HowData; use: UseData; subheads?: { overview: string; steps: string; cases: string } }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="space-y-6">
         <SectionCard title={what.title} id="what">
           <div className="space-y-3 text-sm leading-7">
+            {subheads?.overview && <h3 className="text-base font-semibold text-slate-900">{subheads.overview}</h3>}
             {what.paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
@@ -28,7 +29,8 @@ export default function InfoSections({ what, how, use }: { what: WhatData; how: 
         </SectionCard>
 
         <SectionCard title={how.title} id="how">
-          <ol className="space-y-3 text-sm text-slate-700">
+          {subheads?.steps && <h3 className="text-base font-semibold text-slate-900">{subheads.steps}</h3>}
+          <ol className="mt-2 space-y-3 text-sm text-slate-700">
             {how.steps.map((s, index) => (
               <li key={s} className="flex gap-3">
                 <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-xs font-semibold text-cyan-700 ring-1 ring-cyan-200">
@@ -41,6 +43,7 @@ export default function InfoSections({ what, how, use }: { what: WhatData; how: 
         </SectionCard>
 
         <SectionCard title={use.title} id="use">
+          {subheads?.cases && <h3 className="text-base font-semibold text-slate-900">{subheads.cases}</h3>}
           <ul className="space-y-2 text-sm">
             {use.items.map((s) => (
               <li key={s} className="flex items-start gap-2">
