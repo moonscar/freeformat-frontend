@@ -1,7 +1,8 @@
 "use client";
 import { useMemo, useState } from 'react';
+import { inlineForm, Locale } from '@/i18n';
 
-type Locale = 'zh' | 'en';
+type LocaleType = Locale;
 
 type Props = {
   title: string;
@@ -9,7 +10,7 @@ type Props = {
   submitText: string;
   successText: string;
   apiHint: string;
-  locale: Locale;
+  locale: LocaleType;
   targetEmail: string;
 };
 
@@ -26,68 +27,7 @@ export default function InlineRequestForm({ title, desc, submitText, successText
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExtras, setShowExtras] = useState(false);
-  const copy =
-    locale === 'en'
-      ? {
-          requirementLabel: 'Formatting guideline (required)',
-          requirementPlaceholder: 'Paste the full requirement. More detail gets faster support.',
-          contactLabel: 'Email / contact (required)',
-          contactPlaceholder: 'We will email progress updates and template ID.',
-          extrasTitle: 'Optional info (helps prioritization)',
-          extrasFields: {
-            org: 'School / Department / Journal (optional)',
-            link: 'Guideline link (optional)',
-            pages: 'Doc type or pages (optional)',
-            deadline: 'Deadline (optional)',
-          },
-          specialPlaceholder: 'Special notes (optional)',
-          successSeparator: ': ',
-          errorPrefix: 'Submit failed',
-          defaultResult: 'Email opened',
-          loadingText: 'Submitting…',
-          fallbackName: 'User guideline submission',
-          subjectPrefix: 'Formatting guideline - ',
-          subjectFallback: 'Unknown organization',
-          compose: {
-            org: 'Organization: ',
-            link: 'Guideline link / attachment: ',
-            doc: 'Doc type / pages / deadline: ',
-            special: 'Special notes: ',
-            contact: 'Contact: ',
-            rawPrefix: 'Guideline:\n',
-          },
-          mailError: 'Unable to open email client. Please copy and send manually.',
-        }
-      : {
-          requirementLabel: '格式要求原文（必填）',
-          requirementPlaceholder: '直接粘贴格式要求，越详细越好',
-          contactLabel: '邮箱 / 联系方式（必填）',
-          contactPlaceholder: '我们会把模板进度回信给你',
-          extrasTitle: '补充信息（选填）',
-          extrasFields: {
-            org: '学校 / 院系 / 期刊（选填）',
-            link: '格式要求链接（选填）',
-            pages: '文档类型或页数（选填）',
-            deadline: '截止日期（选填）',
-          },
-          specialPlaceholder: '特殊要求或备注（选填）',
-          successSeparator: '：',
-          errorPrefix: '提交失败',
-          defaultResult: '已打开邮件',
-          loadingText: '提交中…',
-          fallbackName: '用户上传格式要求',
-          subjectPrefix: '格式要求 - ',
-          subjectFallback: '未填写机构',
-          compose: {
-            org: '【学校/院系/期刊】',
-            link: '【格式要求链接/附件】',
-            doc: '【文档类型/页数/DDL】',
-            special: '【特殊要求】',
-            contact: '【联系方式】',
-            rawPrefix: '【格式要求原文】\n',
-          },
-          mailError: '无法唤起邮箱，请手动复制内容发送。',
-        };
+  const copy = inlineForm[locale === 'en' ? 'en' : 'zh'];
   const fieldClass =
     "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200 focus:outline-none transition";
   const labelClass = "space-y-2 text-sm font-medium text-slate-700";
@@ -113,7 +53,7 @@ export default function InlineRequestForm({ title, desc, submitText, successText
     try {
       const payload = {
         text: composedText,
-        name: org || (locale === 'en' ? 'User guideline submission' : '用户上传格式要求'),
+        name: org || copy.fallbackName,
         locale,
         metadata: {
           link, deadline, pages, special, contact,
@@ -129,7 +69,7 @@ export default function InlineRequestForm({ title, desc, submitText, successText
         throw new Error(msg || 'Request failed');
       }
       const data = await res.json();
-      setResult(data.submission_id || (locale === 'en' ? 'submitted' : '已接收'));
+      setResult(data.submission_id || copy.defaultResult);
     } catch (err: any) {
       setError(err?.message || copy.mailError);
     } finally {
