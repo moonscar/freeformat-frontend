@@ -17,16 +17,17 @@ function slugify(s: string) {
 
 export default function InfoSections({ what, how, use }: { what: WhatData; how: HowData; use: UseData }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <div className="grid gap-6 md:grid-cols-2">
-        <SectionCard title={what.title} id={slugify(what.title)}>
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="space-y-6">
+        <SectionCard title={what.title} id="what">
           <div className="space-y-3 text-sm leading-7">
             {what.paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
         </SectionCard>
-        <SectionCard title={how.title} id={slugify(how.title)}>
+
+        <SectionCard title={how.title} id="how">
           <ol className="space-y-3 text-sm text-slate-700">
             {how.steps.map((s, index) => (
               <li key={s} className="flex gap-3">
@@ -38,10 +39,8 @@ export default function InfoSections({ what, how, use }: { what: WhatData; how: 
             ))}
           </ol>
         </SectionCard>
-      </div>
 
-      <div className="mt-6">
-        <SectionCard title={use.title} id={slugify(use.title)}>
+        <SectionCard title={use.title} id="use">
           <ul className="space-y-2 text-sm">
             {use.items.map((s) => (
               <li key={s} className="flex items-start gap-2">
