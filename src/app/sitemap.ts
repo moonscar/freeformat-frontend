@@ -4,7 +4,13 @@ import { siteConfig } from '@/lib/siteConfig';
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
-  const staticRoutes = ['', '/templates'];
+  const staticRoutes = [
+    '',
+    '/templates',
+    '/tool',
+    '/guides/apa-format',
+    '/guides/mla-format',
+  ];
 
   return staticRoutes.flatMap((path) =>
     locales.map((locale) => ({
