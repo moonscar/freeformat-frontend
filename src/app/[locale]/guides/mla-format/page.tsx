@@ -9,6 +9,7 @@ export const metadata = {
 };
 
 export default function Page({ params }: { params: { locale: string } }) {
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '').replace(/\/$/, '') || '/api';
   const what = {
     title: 'What is MLA Format?',
     paragraphs: [
@@ -47,7 +48,7 @@ export default function Page({ params }: { params: { locale: string } }) {
       <h1 className="text-3xl font-semibold text-slate-900">MLA Paper Format — Guide + Template</h1>
       <p className="mt-2 text-slate-600">Practical rules with a ready .docx template.</p>
       <div className="mt-4 flex gap-3">
-        <a className="rounded-full border px-4 py-2 text-sm text-slate-700" href="#" aria-disabled>
+        <a className="rounded-full border px-4 py-2 text-sm text-slate-700" href={`${API_BASE}/guides/mla-format/template.docx`}>
           Download .docx (placeholder)
         </a>
         <a className="rounded-full bg-slate-900 px-4 py-2 text-sm text-white" href={`/${params.locale}/tool`}>
@@ -71,4 +72,3 @@ export default function Page({ params }: { params: { locale: string } }) {
     </main>
   );
 }
-
