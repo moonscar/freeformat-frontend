@@ -6,18 +6,18 @@ export const siteConfig = {
   contactEmail: 'hello@ai-formatter.com',
   locales: {
     zh: {
-      title: 'AI Formatter – 一键论文格式化：毕业论文与期刊投稿排版，模板与 Docx 自动样式',
+      title: 'AI Formatter – APA/MLA 论文格式模板与一键排版',
       description:
-        'AI Formatter 通过规则引擎 + LLM，将学术论文（毕业论文与期刊投稿）按规范自动排版。支持上传/粘贴格式要求生成模板，并一键应用到 Docx；提供任务进度与下载，差异报告即将上线。',
-      keywords: ['AI Formatter', '论文排版', '毕业论文', '期刊投稿', '格式要求', '模板生成', 'docx 自动排版'],
+        '一键将研究/毕业论文按 APA 或 MLA 规范排版。支持上传或粘贴格式要求生成模板，并将样式自动应用到 .docx；提供任务进度与下载。',
+      keywords: ['AI Formatter', 'APA 论文格式', 'MLA 论文格式', '研究论文 格式', 'APA 格式 模板', 'MLA 格式 模板', 'docx 自动排版'],
       ogLocale: 'zh_CN',
       schemaLang: 'zh-CN',
     },
     en: {
-      title: 'AI Formatter – One‑click Academic Paper Formatting | Theses & Journal Submissions',
+      title: 'AI Formatter — APA/MLA Paper Format Templates',
       description:
-        'AI Formatter formats academic papers to required styles using rules + LLM. Paste or upload a guideline to generate a template, upload your .docx, start formatting, and download the result. Diff report coming soon.',
-      keywords: ['AI Formatter', 'academic paper formatting', 'thesis', 'journal submission', 'format guidelines', 'docx styling'],
+        'Format research papers to APA or MLA style in one click. Use ready templates or paste a guideline, upload your .docx, and download a correctly styled paper.',
+      keywords: ['AI Formatter', 'apa format paper', 'apa paper format', 'apa style paper format', 'mla paper format', 'mla format paper', 'research paper format', 'apa format paper example', 'apa research paper format', 'apa citation format journal article'],
       ogLocale: 'en_US',
       schemaLang: 'en-US',
     },

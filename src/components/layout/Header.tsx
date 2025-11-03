@@ -11,12 +11,11 @@ export default function Header({ locale }: { locale: string }) {
           <Link href={`/${locale}/tool`} className="hover:text-slate-900">
             Tool
           </Link>
-          <Link href={`/${locale}/templates`} className="hover:text-slate-900">
-            Templates
-          </Link>
+          <Link href={`/${locale}/templates`} className="hover:text-slate-900">Templates</Link>
+          <Link href={`/${locale}/guides/apa-format`} className="hover:text-slate-900">APA</Link>
+          <Link href={`/${locale}/guides/mla-format`} className="hover:text-slate-900">MLA</Link>
         </nav>
       </div>
     </header>
   );
 }
-
