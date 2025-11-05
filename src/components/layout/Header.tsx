@@ -8,12 +8,10 @@ export default function Header({ locale }: { locale: string }) {
           AI Formatter
         </Link>
         <nav className="flex items-center gap-4 text-sm text-slate-600">
-          <Link href={`/${locale}/tool`} className="hover:text-slate-900">
-            Tool
-          </Link>
-          <Link href={`/${locale}/templates`} className="hover:text-slate-900">Templates</Link>
-          <Link href={`/${locale}/guides/apa-format`} className="hover:text-slate-900">APA</Link>
-          <Link href={`/${locale}/guides/mla-format`} className="hover:text-slate-900">MLA</Link>
+          <Link prefetch={false} href={`/${locale}/tool`} className="hover:text-slate-900">Tool</Link>
+          <Link prefetch={false} href={`/${locale}/guides`} className="hover:text-slate-900">Guides</Link>
+          <Link prefetch={false} href={`/${locale}/guides/apa-format`} className="hover:text-slate-900">APA</Link>
+          <Link prefetch={false} href={`/${locale}/guides/mla-format`} className="hover:text-slate-900">MLA</Link>
         </nav>
       </div>
     </header>

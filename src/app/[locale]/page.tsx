@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import InlineRequestForm from '@/components/InlineRequestForm';
 import Header from '@/components/layout/Header';
 import HeroSection from '@/components/layout/HeroSection';
@@ -7,6 +6,7 @@ import { getT } from '@/i18n';
 import InfoSections from '@/components/sections/InfoSections';
 import AnchorNav from '@/components/sections/AnchorNav';
 import FAQ from '@/components/sections/FAQ';
+import GuideList from '@/components/GuideList';
 
 const REQUEST_EMAIL = process.env.NEXT_PUBLIC_REQUEST_EMAIL || 'hello@ai-formatter.com';
 
@@ -32,6 +32,13 @@ export default function Page({ params }: { params: { locale: string } }) {
           />
         </section>
 
+        {/* Guides index */}
+        <section className="mb-10">
+          <h2 className="mb-3 text-2xl font-semibold text-slate-900">{locale === 'zh' ? '指南索引' : 'Guides Index'}</h2>
+          {/* @ts-expect-error Async Server Component */}
+          <GuideList locale={locale} />
+        </section>
+
         {/* Anchor navigation for sections */}
         <AnchorNav
           items={[
@@ -52,3 +59,4 @@ export default function Page({ params }: { params: { locale: string } }) {
     </>
   );
 }
+export const revalidate = 300;
