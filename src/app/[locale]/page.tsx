@@ -35,7 +35,6 @@ export default function Page({ params }: { params: { locale: string } }) {
         {/* Guides index */}
         <section className="mb-10">
           <h2 className="mb-3 text-2xl font-semibold text-slate-900">{locale === 'zh' ? '指南索引' : 'Guides Index'}</h2>
-          {/* @ts-expect-error Async Server Component */}
           <GuideList locale={locale} />
         </section>
 

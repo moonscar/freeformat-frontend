@@ -26,21 +26,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const g of items) {
       guideEntries.push({
         url: `${baseUrl}/${locale}/guides/${g.slug}`,
-        changefreq: 'weekly',
+        changeFrequency: 'weekly' as const,
         priority: 0.8,
         lastModified: new Date(),
       });
     }
   }
 
-  const staticEntries = staticRoutes.flatMap((path) =>
+  const staticEntries: MetadataRoute.Sitemap = staticRoutes.flatMap((path) =>
     locales.map((locale) => ({
       url: `${baseUrl}/${locale}${path}`,
-      changefreq: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: path === '' ? 1 : 0.7,
       lastModified: new Date(),
     }))
   );
 
-  return [...staticEntries, ...guideEntries];
+  const entries: MetadataRoute.Sitemap = [...staticEntries, ...guideEntries];
+  return entries;
 }

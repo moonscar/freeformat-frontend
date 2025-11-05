@@ -12,8 +12,8 @@ type Guide = {
   version?: string | null;
   sections?: Record<string, any>;
   guide_type?: string | null; // thesis | journal | style | platform
-  raw_fulltext?: string | null; // markdown
-  raw_fulltext_format?: string | null; // md | txt | html
+  rawtext?: string | null; // markdown
+  rawtext_format?: string | null; // md | txt | html
   source?: { url?: string | null; title?: string | null; version?: string | null; lastChecked?: string | null; sourceType?: string | null } | null;
   meta?: { entity_type?: string; entity_name?: string; degree_text?: string | null; notes?: string | null } | null;
   status?: string;
@@ -74,7 +74,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const entity = guide.meta?.entity_name || '';
   const degreeText = guide.meta?.degree_text || '';
   const raw = guide.rawtext || '';
-  const hasMd = (guide.raw_fulltext_format || 'md') === 'md';
+  const hasMd = (guide.rawtext_format || 'md') === 'md';
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
