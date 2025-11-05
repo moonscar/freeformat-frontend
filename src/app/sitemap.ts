@@ -1,18 +1,39 @@
 import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/lib/siteConfig';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+type GuideItem = { slug: string; locale: string };
+
+async function fetchGuides(locale: string): Promise<GuideItem[]> {
+  const api = (process.env.NEXT_PUBLIC_API_BASE || process.env.API_PROXY_TARGET || `${siteConfig.url.replace(/\/$/, '')}/api`).replace(/\/$/, '');
+  try {
+    const res = await fetch(`${api}/guides?locale=${encodeURIComponent(locale)}`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    return (await res.json()) as GuideItem[];
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
-  const staticRoutes = [
-    '',
-    '/templates',
-    '/tool',
-    '/guides/apa-format',
-    '/guides/mla-format',
-  ];
 
-  return staticRoutes.flatMap((path) =>
+  const staticRoutes = ['', '/tool'];
+
+  const guideEntries: MetadataRoute.Sitemap = [];
+  for (const locale of locales) {
+    const items = await fetchGuides(locale);
+    for (const g of items) {
+      guideEntries.push({
+        url: `${baseUrl}/${locale}/guides/${g.slug}`,
+        changefreq: 'weekly',
+        priority: 0.8,
+        lastModified: new Date(),
+      });
+    }
+  }
+
+  const staticEntries = staticRoutes.flatMap((path) =>
     locales.map((locale) => ({
       url: `${baseUrl}/${locale}${path}`,
       changefreq: 'weekly',
@@ -20,4 +41,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
     }))
   );
+
+  return [...staticEntries, ...guideEntries];
 }
