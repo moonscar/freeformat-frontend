@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
-import Toc from '@/components/Toc';
+import TocSidebar from '@/components/TocSidebar';
 
 type Guide = {
   slug: string;
@@ -77,7 +77,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const hasMd = (guide.rawtext_format || 'md') === 'md';
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{title}</h1>
       <p className="mt-2 text-slate-600">{sub}</p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -120,14 +120,19 @@ export default async function Page({ params }: { params: { locale: string; slug:
         </section>
       ) : null}*/}
 
-      {/* Raw full text */}
-      <section className="mt-12 grid gap-6 md:grid-cols-[240px_1fr]">
-        <div>{hasMd ? <Toc md={raw} /> : null}</div>
+      {/* Raw full text with right TOC */}
+      <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_minmax(0,840px)_280px]">
+        {/* Left spacer for wider center column on large screens */}
+        <div className="hidden lg:block" />
         <div>
           <h2 className="mb-3 text-2xl font-semibold text-slate-900">{isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}</h2>
           <div className="rounded-lg border p-4">
             {hasMd ? <Markdown md={raw} /> : <pre className="whitespace-pre-wrap text-slate-800">{raw}</pre>}
           </div>
+        </div>
+        {/* Right sticky, collapsible TOC */}
+        <div className="hidden lg:block">
+          {hasMd ? <TocSidebar md={raw} title={isZh ? '目录' : 'Contents'} label={isZh ? '目录' : 'Contents'} /> : null}
         </div>
       </section>
     </main>

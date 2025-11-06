@@ -28,8 +28,7 @@ export default function Toc({ md }: { md: string }) {
   }, [md]);
   if (!items.length) return null;
   return (
-    <nav className="rounded-lg border p-4 text-sm">
-      <div className="mb-2 font-medium text-slate-900">Contents</div>
+    <nav className="text-sm">
       <ul className="space-y-1">
         {items.map((it) => (
           <li key={it.id} className={it.level === 2 ? '' : 'pl-4'}>
@@ -42,4 +41,3 @@ export default function Toc({ md }: { md: string }) {
     </nav>
   );
 }
-
