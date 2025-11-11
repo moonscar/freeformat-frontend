@@ -6,6 +6,7 @@ import { getT } from '@/i18n';
 import InfoSections from '@/components/sections/InfoSections';
 import FAQ from '@/components/sections/FAQ';
 import AnchorNav from '@/components/sections/AnchorNav';
+import ToolWorkArea from '@/components/ToolWorkArea';
 
 export default function ToolPage({ params, searchParams }: { params: { locale: string }; searchParams?: Record<string, string | string[] | undefined> }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';
@@ -43,13 +44,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
               </div>
             </div>
           ) : null}
-          <h2 className="text-lg font-semibold">{t.placeholderTitle}</h2>
-          <p className="mt-1 text-sm">{t.placeholderDesc}</p>
-          <div className="mt-3 text-sm">
-            <Link href={`/${params.locale}/templates`} className="underline">
-              {t.links.templates} →
-            </Link>
-          </div>
+          <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
         </section>
         {/* Anchor nav + 说明与 FAQ，与反馈页保持一致布局 */}
         <AnchorNav
