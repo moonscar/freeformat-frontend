@@ -12,6 +12,7 @@ type UploadResult = { file_id: string; filename: string; url: string };
 type JobStatus = { job_id: string; status: string; result?: { formatted_doc_url?: string; format_map_url?: string } | null; error?: string | null };
 
 export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
   const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
   const [file, setFile] = React.useState<File | null>(null);
   const [uploading, setUploading] = React.useState(false);
@@ -61,8 +62,15 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     setUploading(true);
     setError("");
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+      const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: fd });
+      if (!res.ok) {
+        let msg = `upload failed: ${res.status}`;
+        try {
+          const j = await res.json();
+          if (j?.detail) msg += ` - ${j.detail}`;
+        } catch {}
+        throw new Error(msg);
+      }
       return (await res.json()) as UploadResult;
     } finally {
       setUploading(false);
@@ -73,7 +81,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     let attempts = 0;
     setJobStatus({ job_id: id, status: "queued" });
     const poll = async () => {
-      const r = await fetch(`/api/jobs/${id}`);
+      const r = await fetch(`${API_BASE}/jobs/${id}`);
       if (!r.ok) throw new Error(`job status failed: ${r.status}`);
       const js = (await r.json()) as JobStatus;
       setJobStatus(js);
@@ -94,8 +102,15 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       const up = await handleUpload();
       setFormatting(true);
       const body = { file_id: up.file_id, template_id: templateId } as any;
-      const res = await fetch("/api/format", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error(`format failed: ${res.status}`);
+      const res = await fetch(`${API_BASE}/format`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      if (!res.ok) {
+        let msg = `format failed: ${res.status}`;
+        try {
+          const j = await res.json();
+          if (j?.detail) msg += ` - ${j.detail}`;
+        } catch {}
+        throw new Error(msg);
+      }
       const data = (await res.json()) as { job_id: string };
       setJobId(data.job_id);
       await pollJob(data.job_id);
@@ -177,4 +192,3 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     </div>
   );
 }
-
