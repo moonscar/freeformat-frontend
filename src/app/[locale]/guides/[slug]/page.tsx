@@ -14,6 +14,7 @@ type Guide = {
   guide_type?: string | null; // thesis | journal | style | platform
   rawtext?: string | null; // markdown
   rawtext_format?: string | null; // md | txt | html
+  template_id?: string | null; // optional backend template reference
   source?: { url?: string | null; title?: string | null; version?: string | null; lastChecked?: string | null; sourceType?: string | null } | null;
   meta?: { entity_type?: string; entity_name?: string; degree_text?: string | null; notes?: string | null } | null;
   status?: string;
@@ -75,6 +76,10 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const degreeText = guide.meta?.degree_text || '';
   const raw = guide.rawtext || '';
   const hasMd = (guide.rawtext_format || 'md') === 'md';
+  const hasTemplate = !!guide.template_id;
+  const toolHref = hasTemplate
+    ? `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
+    : `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}`;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
@@ -84,6 +89,33 @@ export default async function Page({ params }: { params: { locale: string; slug:
         {entity ? <Badge>{entity}</Badge> : null}
         {degreeText ? <Badge>{degreeText}</Badge> : null}
         {guide.guide_type ? <Badge>{guide.guide_type}</Badge> : null}
+      </div>
+
+      {/* Actions (use template) + Source card */}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          {hasTemplate ? (
+            <a
+              href={toolHref}
+              className="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              {isZh ? '使用本模板格式化文档' : 'Format using this template'}
+            </a>
+          ) : (
+            <a
+              href={toolHref}
+              className="inline-flex items-center rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-200"
+              title={isZh ? '未找到模板，前往工具页选择或生成' : 'No template found; go to tool to select or create'}
+            >
+              {isZh ? '前往工具页（选择/生成模板）' : 'Go to tool (select/create template)'}
+            </a>
+          )}
+          {hasTemplate ? (
+            <span className="text-xs text-slate-500">{isZh ? '已提供模板' : 'Template available'}</span>
+          ) : (
+            <span className="text-xs text-slate-500">{isZh ? '暂无模板，工具页可选择/生成' : 'No template; choose/create in tool'}</span>
+          )}
+        </div>
       </div>
 
       {/* Source card */}
