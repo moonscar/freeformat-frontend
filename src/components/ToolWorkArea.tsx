@@ -117,6 +117,16 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     setPreviewError("");
     // clear previous content
     container.innerHTML = "";
+    // ensure runtime styles are present (load from CDN once)
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      if (!document.getElementById('docx-preview-css')) {
+        const link = document.createElement('link');
+        link.id = 'docx-preview-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/docx-preview/dist/docx-preview.css';
+        document.head.appendChild(link);
+      }
+    }
     const docUrl = resolveDocUrl(url);
     const res = await fetch(docUrl);
     if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
