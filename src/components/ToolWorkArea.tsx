@@ -20,6 +20,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
   const [jobId, setJobId] = React.useState<string>("");
   const [jobStatus, setJobStatus] = React.useState<JobStatus | null>(null);
   const [error, setError] = React.useState<string>("");
+  const [previewError, setPreviewError] = React.useState<string>("");
+  const previewRef = React.useRef<HTMLDivElement | null>(null);
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
@@ -85,11 +87,51 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       if (!r.ok) throw new Error(`job status failed: ${r.status}`);
       const js = (await r.json()) as JobStatus;
       setJobStatus(js);
+      // trigger preview on success
+      if (js.status === "succeeded" && js.result?.formatted_doc_url) {
+        try {
+          await renderPreview(js.result.formatted_doc_url);
+        } catch (e: any) {
+          setPreviewError(String(e?.message || e));
+        }
+      }
       if (js.status === "succeeded" || js.status === "failed") return;
       attempts += 1;
       if (attempts < 300) setTimeout(poll, 1500);
     };
     poll().catch((e) => setError(String(e)));
+  }
+
+  function resolveDocUrl(url: string): string {
+    if (!url) return url;
+    if (url.startsWith("/")) {
+      // backend returned a relative download path; prefix API base to leverage proxy
+      return `${API_BASE}${url}`;
+    }
+    return url;
+  }
+
+  async function renderPreview(url: string) {
+    const container = previewRef.current;
+    if (!container) return;
+    setPreviewError("");
+    // clear previous content
+    container.innerHTML = "";
+    const docUrl = resolveDocUrl(url);
+    const res = await fetch(docUrl);
+    if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
+    const buf = await res.arrayBuffer();
+    // dynamic import to avoid SSR issues and optional dependency
+    const mod: any = await import('docx-preview').catch(() => null);
+    if (!mod || typeof mod.renderAsync !== 'function') {
+      throw new Error(locale === 'zh' ? '缺少 docx 预览依赖（docx-preview），请先安装。' : 'Missing docx-preview dependency. Please install it to enable preview.');
+    }
+    await mod.renderAsync(buf, container, undefined, {
+      className: 'docx-preview',
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+    });
   }
 
   async function handleStart() {
@@ -179,6 +221,15 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
             </div>
           ) : null}
           {jobStatus.error ? <div className="mt-1 text-rose-600">{jobStatus.error}</div> : null}
+          {jobStatus?.status === 'succeeded' && jobStatus.result?.formatted_doc_url ? (
+            <div className="mt-4">
+              <div className="mb-2 text-sm font-medium text-slate-900">{locale === 'zh' ? '预览' : 'Preview'}</div>
+              {previewError ? (
+                <div className="mb-2 text-xs text-rose-600">{previewError}</div>
+              ) : null}
+              <div ref={previewRef} className="docx-container overflow-auto rounded-md border p-3"></div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
