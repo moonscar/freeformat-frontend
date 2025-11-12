@@ -13,7 +13,7 @@ type JobStatus = { job_id: string; status: string; result?: { formatted_doc_url?
 
 export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
-  const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
+  const [templateId] = React.useState<string>(initialTemplateId || "");
   const [file, setFile] = React.useState<File | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [formatting, setFormatting] = React.useState(false);
@@ -23,10 +23,10 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
-      selectTemplate: "模板",
-      usingTemplate: "使用模板",
-      change: "更换",
-      noTemplate: "未选择模板，请先选择/生成",
+      selectTemplate: "关联信息",
+      usingTemplate: "",
+      change: "",
+      noTemplate: "未检测到模板，请返回指南页或稍后重试",
       uploadDoc: "上传 .docx",
       start: "开始格式化",
       uploading: "正在上传…",
@@ -38,10 +38,10 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       downloadMap: "下载格式映射",
     };
     const en: Record<string, string> = {
-      selectTemplate: "Template",
-      usingTemplate: "Using template",
-      change: "Change",
-      noTemplate: "No template selected. Please select/create first.",
+      selectTemplate: "Context",
+      usingTemplate: "",
+      change: "",
+      noTemplate: "No template detected. Please go back to guide or try later.",
       uploadDoc: "Upload .docx",
       start: "Start Formatting",
       uploading: "Uploading…",
@@ -50,7 +50,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       error: "Error",
       result: "Result",
       downloadDoc: "Download formatted doc",
-      downloadMap: "Download format map",
+      downloadMap: "",
     };
     return (locale === "zh" ? zh : en)[s] || s;
   };
@@ -123,27 +123,21 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   return (
     <div className="space-y-6">
-      {/* Template selector (MVP: show template id and allow manual edit) */}
+      {/* Context / related guide link (do not display template_id) */}
       <section className="rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
-          {guideSlug ? <div className="text-xs text-slate-500">guide: {guideSlug}</div> : null}
+        <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
+        <div className="mt-2 text-sm text-slate-700">
+          {guideSlug ? (
+            <a className="text-cyan-700 underline" href={`/${locale}/guides/${guideSlug}`}>
+              {locale === 'zh' ? '查看关联指南' : 'View related guide'}
+            </a>
+          ) : (
+            <span className="text-xs text-slate-500">{locale === 'zh' ? '无关联指南' : 'No related guide'}</span>
+          )}
         </div>
-        <div className="mt-3 flex items-center gap-2">
-          <input
-            className="w-full rounded-md border px-3 py-2 text-sm"
-            placeholder={locale === "zh" ? "模板 ID（UUID）" : "Template ID (UUID)"}
-            value={templateId}
-            onChange={(e) => setTemplateId(e.target.value.trim())}
-          />
-          {/* 预留“更换/搜索”入口 */}
-          <button type="button" className="rounded-md border px-3 py-2 text-sm" onClick={() => alert(locale === 'zh' ? '搜索/更换模板功能即将上线' : 'Search/change template coming soon')}>{t("change")}</button>
-        </div>
-        {templateId ? (
-          <div className="mt-2 text-xs text-slate-600">{t("usingTemplate")}: <span className="font-mono">{templateId}</span></div>
-        ) : (
+        {!templateId ? (
           <div className="mt-2 text-xs text-rose-600">{t("noTemplate")}</div>
-        )}
+        ) : null}
       </section>
 
       {/* Upload */}
@@ -181,9 +175,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
               {jobStatus.result.formatted_doc_url ? (
                 <a className="text-cyan-700 underline" href={jobStatus.result.formatted_doc_url} target="_blank" rel="noopener noreferrer">{t("downloadDoc")}</a>
               ) : null}
-              {jobStatus.result.format_map_url ? (
-                <a className="text-cyan-700 underline" href={jobStatus.result.format_map_url} target="_blank" rel="noopener noreferrer">{t("downloadMap")}</a>
-              ) : null}
+              {/* No format map download per requirement */}
             </div>
           ) : null}
           {jobStatus.error ? <div className="mt-1 text-rose-600">{jobStatus.error}</div> : null}
