@@ -217,22 +217,18 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   return (
     <div className="space-y-6">
-      {/* Context / related guide link (do not display template_id) */}
-      <section className="rounded-lg border p-4">
-        <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
-        <div className="mt-2 text-sm text-slate-700">
-          {guideSlug ? (
-            <a className="text-cyan-700 underline" href={`/${locale}/guides/${guideSlug}`}>
-              {locale === 'zh' ? '查看关联指南' : 'View related guide'}
-            </a>
-          ) : (
+      {/* Context / related guide link (not shown if already displayed in page banner) */}
+      {!guideSlug ? (
+        <section className="rounded-lg border p-4">
+          <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
+          <div className="mt-2 text-sm text-slate-700">
             <span className="text-xs text-slate-500">{locale === 'zh' ? '无关联指南' : 'No related guide'}</span>
-          )}
-        </div>
-        {!templateId ? (
-          <div className="mt-2 text-xs text-rose-600">{t("noTemplate")}</div>
-        ) : null}
-      </section>
+          </div>
+          {!templateId ? (
+            <div className="mt-2 text-xs text-rose-600">{t("noTemplate")}</div>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* Upload */}
       <section className="rounded-lg border p-4">

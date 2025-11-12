@@ -25,23 +25,33 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         <section className="rounded-2xl border border-dashed p-6 text-slate-700">
           {isFromGuide ? (
             <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-              <div className="font-medium text-slate-900">
-                {locale === 'zh' ? '已从指南跳转' : 'Came from guide'}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="font-medium text-slate-900">
+                  {locale === 'zh' ? '已从指南跳转' : 'Came from guide'}
+                </div>
+                <div className="text-slate-700">
+                  {locale === 'zh' ? '指南' : 'Guide'}: <span className="font-mono">{guideSlug}</span>
+                </div>
+                <a
+                  className="text-cyan-700 underline"
+                  href={`/${params.locale}/guides/${guideSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {locale === 'zh' ? '查看关联指南' : 'View related guide'}
+                </a>
+                <a
+                  className="text-cyan-700 underline"
+                  href={`/${params.locale}/guides?from=tool&slug=${encodeURIComponent(guideSlug)}&action=change-template#search`}
+                >
+                  {locale === 'zh' ? '更换模板' : 'Change template'}
+                </a>
               </div>
-              <div className="mt-1 text-slate-700">
-                {locale === 'zh' ? '指南' : 'Guide'}: <span className="font-mono">{guideSlug}</span>
-                {templateId ? (
-                  <>
-                    <span className="mx-2">•</span>
-                    {locale === 'zh' ? '将使用模板' : 'Using template'}: <span className="font-mono">{templateId}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="mx-2">•</span>
-                    {locale === 'zh' ? '未检测到模板，请在下方选择/生成。' : 'No template detected, please select/create below.'}
-                  </>
-                )}
-              </div>
+              {!templateId ? (
+                <div className="mt-1 text-xs text-rose-600">
+                  {locale === 'zh' ? '未检测到模板，请下方选择/生成或返回指南页。' : 'No template detected. Select/create below or go back to guide.'}
+                </div>
+              ) : null}
             </div>
           ) : null}
           <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
