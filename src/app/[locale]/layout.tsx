@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '../../styles/globals.css';
 import { siteConfig } from '@/lib/siteConfig';
 import Analytics from '@/components/Analytics';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -54,6 +55,7 @@ export default function RootLayout({ children, params }: LayoutProps) {
       <body className="min-h-screen bg-gradient-to-br from-[#f6f8ff] via-[#fef7f2] to-[#f0fbff] text-slate-900 antialiased">
         <Analytics />
         {children}
+        <VercelAnalytics />
       </body>
     </html>
   );
