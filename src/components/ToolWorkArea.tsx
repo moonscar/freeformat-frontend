@@ -22,6 +22,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
   const [error, setError] = React.useState<string>("");
   const [previewError, setPreviewError] = React.useState<string>("");
   const previewRef = React.useRef<HTMLDivElement | null>(null);
+  const previewedJobRef = React.useRef<string>("");
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
@@ -57,6 +58,15 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     return (locale === "zh" ? zh : en)[s] || s;
   };
 
+  const isDev = process.env.NODE_ENV !== 'production';
+  React.useEffect(() => {
+    if (isDev) {
+      // Initial debug snapshot
+      // eslint-disable-next-line no-console
+      console.debug('[tool] init', { API_BASE, locale, guideSlug, initialTemplateId, templateId });
+    }
+  }, []);
+
   async function handleUpload(): Promise<UploadResult> {
     if (!file) throw new Error(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
     const fd = new FormData();
@@ -64,6 +74,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     setUploading(true);
     setError("");
     try {
+      if (isDev) console.debug('[tool] upload -> POST', `${API_BASE}/upload`, { file: file?.name, size: file?.size });
       const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: fd });
       if (!res.ok) {
         let msg = `upload failed: ${res.status}`;
@@ -73,7 +84,9 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
         } catch {}
         throw new Error(msg);
       }
-      return (await res.json()) as UploadResult;
+      const json = (await res.json()) as UploadResult;
+      if (isDev) console.debug('[tool] upload <- OK', json);
+      return json;
     } finally {
       setUploading(false);
     }
@@ -87,12 +100,17 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       if (!r.ok) throw new Error(`job status failed: ${r.status}`);
       const js = (await r.json()) as JobStatus;
       setJobStatus(js);
+      if (isDev) console.debug('[tool] job <-', js);
       // trigger preview on success
       if (js.status === "succeeded" && js.result?.formatted_doc_url) {
-        try {
-          await renderPreview(js.result.formatted_doc_url);
-        } catch (e: any) {
-          setPreviewError(String(e?.message || e));
+        if (previewedJobRef.current !== js.job_id) {
+          try {
+            await renderPreview(js.result.formatted_doc_url);
+            previewedJobRef.current = js.job_id;
+          } catch (e: any) {
+            setPreviewError(String(e?.message || e));
+            if (isDev) console.debug('[tool] preview error', e);
+          }
         }
       }
       if (js.status === "succeeded" || js.status === "failed") return;
@@ -101,6 +119,21 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     };
     poll().catch((e) => setError(String(e)));
   }
+
+  // Fallback: react to jobStatus changes (in case we missed inside poll loop)
+  React.useEffect(() => {
+    const js = jobStatus;
+    if (!js) return;
+    if (js.status === 'succeeded' && js.result?.formatted_doc_url) {
+      if (previewedJobRef.current !== js.job_id) {
+        renderPreview(js.result.formatted_doc_url)
+          .then(() => {
+            previewedJobRef.current = js.job_id;
+          })
+          .catch((e: any) => setPreviewError(String(e?.message || e)));
+      }
+    }
+  }, [jobStatus]);
 
   function resolveDocUrl(url: string): string {
     if (!url) return url;
@@ -125,23 +158,28 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
         link.rel = 'stylesheet';
         link.href = 'https://unpkg.com/docx-preview/dist/docx-preview.css';
         document.head.appendChild(link);
+        if (isDev) console.debug('[tool] injected docx-preview css');
       }
     }
     const docUrl = resolveDocUrl(url);
+    if (isDev) console.debug('[tool] preview fetch', { url, resolved: docUrl });
     const res = await fetch(docUrl);
     if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
     const buf = await res.arrayBuffer();
     // dynamic import to avoid SSR issues and optional dependency
-    const mod: any = await import('docx-preview').catch(() => null);
-    if (!mod || typeof mod.renderAsync !== 'function') {
-      throw new Error(locale === 'zh' ? '缺少 docx 预览依赖（docx-preview），请先安装。' : 'Missing docx-preview dependency. Please install it to enable preview.');
+    const mod: any = await import('docx-preview').catch((e) => { if (isDev) console.debug('[tool] import docx-preview failed', e); return null; });
+    const renderAsync = (mod && mod.renderAsync) || (mod && mod.default && mod.default.renderAsync);
+    if (typeof renderAsync !== 'function') {
+      throw new Error(locale === 'zh' ? 'docx-preview 未提供 renderAsync，请确认版本或依赖安装。' : 'docx-preview renderAsync not found. Check version/installation.');
     }
-    await mod.renderAsync(buf, container, undefined, {
+    if (isDev) console.debug('[tool] renderAsync start');
+    await renderAsync(buf, container, undefined, {
       className: 'docx-preview',
       inWrapper: true,
       ignoreWidth: false,
       ignoreHeight: false,
     });
+    if (isDev) console.debug('[tool] renderAsync done');
   }
 
   async function handleStart() {
@@ -151,9 +189,11 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       return;
     }
     try {
+      if (isDev) console.debug('[tool] start formatting', { templateId, guideSlug });
       const up = await handleUpload();
       setFormatting(true);
       const body = { file_id: up.file_id, template_id: templateId } as any;
+      if (isDev) console.debug('[tool] format -> POST', `${API_BASE}/format`, body);
       const res = await fetch(`${API_BASE}/format`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) {
         let msg = `format failed: ${res.status}`;
@@ -165,9 +205,11 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       }
       const data = (await res.json()) as { job_id: string };
       setJobId(data.job_id);
+      if (isDev) console.debug('[tool] format <- OK job', data);
       await pollJob(data.job_id);
     } catch (e: any) {
       setError(String(e?.message || e));
+      if (isDev) console.debug('[tool] start error', e);
     } finally {
       setFormatting(false);
     }
@@ -225,7 +267,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
           {jobStatus.result ? (
             <div className="mt-2 flex items-center gap-4">
               {jobStatus.result.formatted_doc_url ? (
-                <a className="text-cyan-700 underline" href={jobStatus.result.formatted_doc_url} target="_blank" rel="noopener noreferrer">{t("downloadDoc")}</a>
+                <a className="text-cyan-700 underline" href={resolveDocUrl(jobStatus.result.formatted_doc_url)} target="_blank" rel="noopener noreferrer">{t("downloadDoc")}</a>
               ) : null}
               {/* No format map download per requirement */}
             </div>
