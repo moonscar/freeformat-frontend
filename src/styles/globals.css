@@ -8,9 +8,7 @@ html, body {
   height: 100%;
 }
 
-body {
-  @apply bg-gradient-to-br from-[#f6f8ff] via-[#fef7f2] to-[#f0fbff] text-slate-900 antialiased;
-}
+/* Background colors are controlled via the root layout's body className */
 
 a {
   @apply text-cyan-700 transition-colors hover:text-cyan-900;
