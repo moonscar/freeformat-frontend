@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
       title: localeConfig.title,
       description: localeConfig.description,
       url: `${siteConfig.url}/${localeKey}`,
-      siteName: 'AI Formatter',
+      siteName: 'FreeFormat · AI Document Formatter',
       locale: localeConfig.ogLocale,
       type: 'website',
     },

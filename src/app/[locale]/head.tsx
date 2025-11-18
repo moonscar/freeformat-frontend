@@ -19,7 +19,7 @@ export default function Head({ params }: { params: { locale: string } }) {
     },
     creator: {
       '@type': 'Organization',
-      name: 'AI Formatter',
+      name: 'FreeFormat · AI Document Formatter',
       email: siteConfig.contactEmail,
     },
   };

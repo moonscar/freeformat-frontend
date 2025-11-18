@@ -4,14 +4,15 @@ export type Locale = 'zh' | 'en';
 const pages = {
   zh: {
     common: {
-      siteTitle: '一键自动排版论文（毕业论文与期刊论文）',
-      siteDesc: '上传/粘贴格式要求，生成模板并一键应用到 docx；优先适配毕业论文与期刊论文常见规范。',
+      siteTitle: 'FreeFormat – AI 文档自动排版（毕业论文与学术文档）',
+      siteDesc:
+        'FreeFormat 是一款 AI 文档排版工具（AI document formatter），优先支持毕业论文与期刊论文。上传/粘贴格式要求生成模板，一键将 APA、MLA 或学校要求应用到 docx。',
     },
     landing: {
       badge: '内测优先通道 · 免费试用',
-      heroTitle: '一键自动排版论文（毕业/期刊）',
+      heroTitle: 'FreeFormat · AI 文档排版工具',
       heroDesc:
-        '欢迎提交你正在/即将面临的格式要求，我们将优先支持毕业论文与期刊论文的常见规范，并回信告知进度。',
+        'FreeFormat 是一款面向毕业论文与期刊论文的 AI 文档排版工具。欢迎提交你正在/即将面临的格式要求，我们将优先适配 thesis format / academic paper format，并回信告知进度。',
       cta: { primary: '立即提交格式', secondary: '查看模板' },
       features: { title: '核心功能', items: ['支持毕业论文与期刊论文', 'docx 解析', '模板应用', '差异报告（即将）'] },
       howItWorks: { title: '工作原理', steps: ['发送格式要求到邮箱', '我们生成模板并回信', '正式版上线后一键排版并下载'] },
@@ -26,19 +27,29 @@ const pages = {
       info: {
         subheads: { overview: '概览', steps: '步骤', cases: '使用场景' },
         what: {
-          title: '什么是 AI Formatter？',
+          title: '什么是 FreeFormat（AI 文档排版工具）？',
           paragraphs: [
-            'AI Formatter 将自然语言的格式要求转成结构化模板，并自动应用到论文的字体、字号、段前后距、编号与图表标题等样式。',
-            '我们优先覆盖毕业论文与期刊论文的常见规范，让你把时间花在内容而不是排版上。',
+            'FreeFormat 是一款 AI 文档排版工具（AI document formatter），可以把自然语言的格式要求转成结构化模板，并自动应用到论文的字体、字号、段前后距、编号与图表标题等样式。',
+            '我们优先覆盖毕业论文与期刊论文的常见规范，包括常见的 thesis format 与 academic paper format，让你把时间花在内容而不是排版上。',
           ],
         },
         how: {
           title: '如何使用？',
-          steps: ['粘贴或上传格式要求', '我们生成/校验模板（常见规范提供预置模板）', '上传 .docx 论文', '发起格式化', '下载排版后的文档，查看差异（即将）'],
+          steps: [
+            '粘贴或上传格式要求（可包含 APA / MLA / 学校自定义要求）',
+            '我们生成/校验模板（常见规范提供预置模板）',
+            '上传 .docx 论文或学术文档',
+            '发起格式化，一键应用 thesis format / academic paper format',
+            '下载排版后的文档，查看差异（即将）',
+          ],
         },
         use: {
           title: '可以用来做什么？',
-          items: ['毕业论文提交前一键排版', '研究者/学者按期刊投稿规范排版', '导师/教务批量验证格式（中期）'],
+          items: [
+            '毕业论文提交前一键排版（thesis format）',
+            '研究者/学者按期刊投稿规范排版（academic paper format）',
+            '导师/教务批量验证格式（中期）',
+          ],
         },
         faq: {
           title: '常见问题',
@@ -61,14 +72,15 @@ const pages = {
   },
   en: {
     common: {
-      siteTitle: 'One‑click Academic Paper Formatting',
-      siteDesc: 'Paste/upload a guideline to generate a template and apply it to your .docx. Focus on theses and journal submissions.',
+      siteTitle: 'FreeFormat – AI Document Formatter for Theses & Academic Papers',
+      siteDesc:
+        'FreeFormat is an AI document formatter that turns your guideline into a template and applies the right thesis format or academic paper format to your .docx.',
     },
     landing: {
       badge: 'Early Access · Free While In Beta',
-      heroTitle: 'One‑click Academic Paper Formatting',
+      heroTitle: 'FreeFormat · AI Document Formatter',
       heroDesc:
-        'Send us your guideline. We focus on theses and journal submissions first and will reply with progress updates.',
+        'FreeFormat is an AI document formatter for theses and academic papers. Send us your guideline – we focus on thesis format and academic paper format first and will reply with progress updates.',
       cta: { primary: 'Submit a guideline', secondary: 'Explore templates' },
       features: { title: 'Features', items: ['Supports theses and journal papers', 'Docx parsing', 'Template styling', 'Diff report (soon)'] },
       howItWorks: { title: 'How it works', steps: ['Email us your guideline', 'We build a template & reply', 'Format & download when GA is ready'] },
@@ -83,19 +95,29 @@ const pages = {
       info: {
         subheads: { overview: 'Overview', steps: 'Steps', cases: 'Use cases' },
         what: {
-          title: 'What is AI Formatter?',
+          title: 'What is FreeFormat (AI document formatter)?',
           paragraphs: [
-            'AI Formatter converts natural‑language guidelines into a structured template and applies styles such as font, size, spacing, numbering, and captions automatically.',
-            'We focus on theses and journal submissions so you can spend time on content, not formatting.',
+            'FreeFormat is an AI document formatter that converts natural‑language guidelines into a structured template and applies styles such as font, size, spacing, numbering, and captions automatically.',
+            'We focus on theses and academic papers (thesis format and academic paper format) so you can spend time on content, not formatting.',
           ],
         },
         how: {
           title: 'How to use',
-          steps: ['Paste or upload the guideline', 'We build/verify a template (popular ones pre‑built)', 'Upload your .docx', 'Start formatting', 'Download and review the diff (soon)'],
+          steps: [
+            'Paste or upload your formatting guideline (APA, MLA or custom)',
+            'We build/verify a template (popular thesis and academic paper formats pre‑built)',
+            'Upload your .docx thesis or academic paper',
+            'Start formatting with the right thesis format / academic paper format',
+            'Download and review the diff (soon)',
+          ],
         },
         use: {
           title: 'Use cases',
-          items: ['Thesis submission formatting', 'Journal submission formatting', 'Bulk compliance checks for advisors/admins (mid‑term)'],
+          items: [
+            'Thesis submission formatting (thesis format)',
+            'Journal submission formatting (academic paper format)',
+            'Bulk compliance checks for advisors/admins (mid‑term)',
+          ],
         },
         faq: {
           title: 'FAQ',

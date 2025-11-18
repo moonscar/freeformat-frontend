@@ -25,7 +25,7 @@ export default function Page({ params }: { params: { locale: string } }) {
         title: '什么是 MLA 格式？',
         paragraphs: [
           'MLA（第 9 版）常用于人文学科。本页聚焦页眉、行距、页边距、标题、字体，以及参考文献（Works Cited）列表的版式。',
-          '你可以下载 .docx 模板，或上传 .docx 由 AI Formatter 自动应用 MLA 样式。',
+          '你可以下载 .docx 模板，或上传 .docx 由 FreeFormat（AI 文档排版工具）自动应用 MLA 样式。',
         ] as const,
       }
     : {
