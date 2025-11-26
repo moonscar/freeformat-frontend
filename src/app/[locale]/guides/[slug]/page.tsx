@@ -76,10 +76,35 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const degreeText = guide.meta?.degree_text || '';
   const raw = guide.rawtext || '';
   const hasMd = (guide.rawtext_format || 'md') === 'md';
+  const blocks = Array.isArray((guide.sections as any)?.blocks)
+    ? ((guide.sections as any).blocks as { id?: string; title?: string; md?: string }[])
+    : [];
+  const hasBlocks = blocks.length > 0;
+  const tocMd = hasBlocks
+    ? blocks
+        .map((b) => {
+          const heading = b.title ? `## ${b.title}\n\n` : '';
+          return `${heading}${b.md || ''}`.trim();
+        })
+        .filter(Boolean)
+        .join('\n\n\n')
+    : hasMd
+    ? raw
+    : '';
   const hasTemplate = !!guide.template_id;
   const toolHref = hasTemplate
     ? `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
     : `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}`;
+
+  const summaryCard = (guide.sections as any)?.summary?.card as
+    | {
+        overviewTitle?: string;
+        overviewParagraphs?: string[];
+        howTitle?: string;
+        howSteps?: string[];
+        sourceLabel?: string;
+      }
+    | null;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
@@ -118,53 +143,89 @@ export default async function Page({ params }: { params: { locale: string; slug:
         </div>
       </div>
 
-      {/* Source card */}
-      {guide.source ? (
-        <div className="mt-6 rounded-lg border p-4 text-sm">
-          <div className="font-medium text-slate-900">{isZh ? '来源信息' : 'Source'}</div>
-          <div className="mt-1 text-slate-700">
-            {guide.source.title ? <div>{guide.source.title}</div> : null}
-            {guide.source.url ? (
-              <div>
-                <a className="text-cyan-700 hover:text-cyan-900 underline" href={guide.source.url} target="_blank" rel="noopener noreferrer">
-                  {guide.source.url}
-                </a>
-              </div>
-            ) : null}
-            <div className="text-slate-500">
-              {isZh ? '最近检查：' : 'Last checked: '} {guide.source.lastChecked || '—'}
+      {/* Summary & how-to section (from backend summary.card) */}
+      {summaryCard ? (
+        <section className="mt-10 mx-auto max-w-[840px]">
+          <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-md shadow-slate-200/70">
+            <h2 className="mb-3 text-2xl font-semibold text-slate-900">{summaryCard.overviewTitle}</h2>
+            <div className="space-y-3 text-slate-800">
+              {(summaryCard.overviewParagraphs || []).map((p, idx) => (
+                <p key={idx} className="leading-7">
+                  {p}
+                </p>
+              ))}
+            </div>
+            <div className="mt-6">
+              <h3 className="text-base font-semibold text-slate-900">{summaryCard.howTitle}</h3>
+              <ol className="mt-2 space-y-2 text-sm text-slate-700">
+                {(summaryCard.howSteps || []).map((s, index) => (
+                  <li key={index} className="flex gap-2">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[11px] font-semibold text-cyan-700 ring-1 ring-cyan-200">
+                      {index + 1}
+                    </span>
+                    <span className="pt-0.5">{s}</span>
+                  </li>
+                ))}
+              </ol>
+              {guide.source?.url && summaryCard.sourceLabel ? (
+                <p className="mt-4 text-xs text-slate-500">
+                  {isZh ? '来源：' : 'Source: '}{' '}
+                  <a
+                    href={guide.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-700 hover:text-cyan-900 underline"
+                  >
+                    {summaryCard.sourceLabel}
+                  </a>
+                </p>
+              ) : null}
             </div>
           </div>
-        </div>
+        </section>
       ) : null}
 
-      {/* Summary (sections) */}
-{/*      {guide.sections?.fulltext?.paragraphs?.length ? (
-        <section className="mt-10">
-          <h2 className="mb-3 text-2xl font-semibold text-slate-900">{isZh ? '概览' : 'Overview'}</h2>
-          <div className="space-y-3 text-slate-800">
-            {guide.sections.fulltext.paragraphs.slice(0, 3).map((p: string, idx: number) => (
-              <p key={idx} className="leading-7">
-                {p}
-              </p>
-            ))}
-          </div>
-        </section>
-      ) : null}*/}
-
-      {/* Raw full text with right TOC */}
+      {/* Main content: prefer structured sections.blocks when available; fall back to raw full text */}
       <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_minmax(0,840px)_280px]">
         {/* Left spacer for wider center column on large screens */}
         <div className="hidden lg:block" />
         <div>
-          <h2 className="mb-3 text-2xl font-semibold text-slate-900">{isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}</h2>
           <div className="rounded-lg border p-4">
-            {hasMd ? <Markdown md={raw} /> : <pre className="whitespace-pre-wrap text-slate-800">{raw}</pre>}
+            {hasBlocks ? (
+              <article className="space-y-8">
+                {blocks.map((b, idx) => (
+                  <section key={b.id || b.title || idx}>
+                    {b.title ? (
+                      <h2 className="mb-3 text-2xl font-semibold text-slate-900">{b.title}</h2>
+                    ) : null}
+                    {b.md ? (
+                      <Markdown md={b.md} />
+                    ) : null}
+                  </section>
+                ))}
+              </article>
+            ) : hasMd ? (
+              <>
+                <h2 className="mb-3 text-2xl font-semibold text-slate-900">
+                  {isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}
+                </h2>
+                <Markdown md={raw} />
+              </>
+            ) : (
+              <>
+                <h2 className="mb-3 text-2xl font-semibold text-slate-900">
+                  {isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}
+                </h2>
+                <pre className="whitespace-pre-wrap text-slate-800">{raw}</pre>
+              </>
+            )}
           </div>
         </div>
         {/* Right sticky, collapsible TOC */}
         <div className="hidden lg:block">
-          {hasMd ? <TocSidebar md={raw} title={isZh ? '目录' : 'Contents'} label={isZh ? '目录' : 'Contents'} /> : null}
+          {tocMd ? (
+            <TocSidebar md={tocMd} title={isZh ? '目录' : 'Contents'} label={isZh ? '目录' : 'Contents'} />
+          ) : null}
         </div>
       </section>
     </main>
