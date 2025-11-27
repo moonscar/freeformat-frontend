@@ -16,7 +16,8 @@ type Guide = {
   rawtext_format?: string | null; // md | txt | html
   template_id?: string | null; // optional backend template reference
   source?: { url?: string | null; title?: string | null; version?: string | null; lastChecked?: string | null; sourceType?: string | null } | null;
-  meta?: { entity_type?: string; entity_name?: string; degree_text?: string | null; notes?: string | null } | null;
+  meta?: { entity_type?: string; entity_name?: string; degree_text?: string | null; guide_mode?: string | null; notes?: string | null } | null;
+  isIntentOnly?: boolean;
   status?: string;
 };
 
@@ -74,6 +75,8 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const sub = [guide.guide_type || 'guide', guide.version || guide.source?.version].filter(Boolean).join(' • ');
   const entity = guide.meta?.entity_name || '';
   const degreeText = guide.meta?.degree_text || '';
+  const guideMode = guide.meta?.guide_mode || 'full';
+  const isIntentOnly = guide.isIntentOnly ?? guideMode === 'intent_only';
   const raw = guide.rawtext || '';
   const hasMd = (guide.rawtext_format || 'md') === 'md';
   const blocks = Array.isArray((guide.sections as any)?.blocks)
@@ -106,6 +109,10 @@ export default async function Page({ params }: { params: { locale: string; slug:
       }
     | null;
 
+  const intentHref = `/${params.locale}/guides/${encodeURIComponent(
+    guide.slug,
+  )}?intent=need-template&pos=hero`;
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{title}</h1>
@@ -118,7 +125,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
 
       {/* Actions (use template) + Source card */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {hasTemplate ? (
             <a
               href={toolHref}
@@ -135,6 +142,14 @@ export default async function Page({ params }: { params: { locale: string; slug:
               {isZh ? '前往工具页（选择/生成模板）' : 'Go to tool (select/create template)'}
             </a>
           )}
+          {isIntentOnly ? (
+            <a
+              href={intentHref}
+              className="inline-flex items-center rounded-md border border-cyan-600 px-3 py-2 text-sm font-medium text-cyan-700 hover:bg-cyan-50"
+            >
+              {isZh ? '我需要这份格式模板' : 'I need this formatting template'}
+            </a>
+          ) : null}
           {hasTemplate ? (
             <span className="text-xs text-slate-500">{isZh ? '已提供模板' : 'Template available'}</span>
           ) : (
