@@ -19,7 +19,6 @@ function pickLocale(accept: string | null | undefined): 'zh' | 'en' {
 export default function RootRedirect() {
   const accept = headers().get('accept-language');
   const locale = pickLocale(accept);
-  // 首页定位为反馈收集页面（/[locale]）
-  redirect(`/${locale}`);
+  // 首页定位为工具页面（/[locale]/tool）
+  redirect(`/${locale}/tool`);
 }
-

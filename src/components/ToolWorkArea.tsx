@@ -10,10 +10,13 @@ type Props = {
 
 type UploadResult = { file_id: string; filename: string; url: string };
 type JobStatus = { job_id: string; status: string; result?: { formatted_doc_url?: string; format_map_url?: string } | null; error?: string | null };
+type GuideSearchItem = { slug: string; locale: string; title?: string | null; templateId: string; status: string };
 
 export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
-  const [templateId] = React.useState<string>(initialTemplateId || "");
+  const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
+  const [currentGuideSlug, setCurrentGuideSlug] = React.useState<string>(guideSlug || "");
+  const [currentGuideTitle, setCurrentGuideTitle] = React.useState<string>("");
   const [file, setFile] = React.useState<File | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [formatting, setFormatting] = React.useState(false);
@@ -58,6 +61,11 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     return (locale === "zh" ? zh : en)[s] || s;
   };
 
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [searching, setSearching] = React.useState(false);
+  const [searchError, setSearchError] = React.useState<string>("");
+  const [searchResults, setSearchResults] = React.useState<GuideSearchItem[]>([]);
+
   const isDev = process.env.NODE_ENV !== 'production';
   React.useEffect(() => {
     if (isDev) {
@@ -66,6 +74,70 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       console.debug('[tool] init', { API_BASE, locale, guideSlug, initialTemplateId, templateId });
     }
   }, []);
+
+  React.useEffect(() => {
+    // 默认尝试拉取一批推荐模板（无查询词），方便直接使用
+    void handleSearch();
+  }, []);
+
+  React.useEffect(() => {
+    // 若从指南页跳转且尚未有标题，尝试获取指南详情以展示名称
+    async function fetchGuideTitle() {
+      if (!guideSlug || currentGuideTitle) return;
+      try {
+        const res = await fetch(`${API_BASE}/guides/${guideSlug}?locale=${locale}`);
+        if (!res.ok) return;
+        const j = await res.json();
+        if (j?.title) {
+          setCurrentGuideTitle(j.title);
+        }
+      } catch (e) {
+        if (isDev) console.debug('[tool] fetch guide title failed', e);
+      }
+    }
+    void fetchGuideTitle();
+  }, [guideSlug, locale, API_BASE, currentGuideTitle, isDev]);
+
+  async function handleSearch(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    setSearching(true);
+    setSearchError("");
+    try {
+      const params = new URLSearchParams();
+      if (locale) params.set("locale", locale);
+      const q = searchQuery.trim();
+      if (q) params.set("q", q);
+      params.set("limit", "20");
+      const url = `${API_BASE}/guides/search?${params.toString()}`;
+      if (isDev) console.debug('[tool] search -> GET', url);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`search failed: ${res.status}`);
+      const js = (await res.json()) as any[];
+      const items: GuideSearchItem[] = (js || []).map((it) => ({
+        slug: it.slug,
+        locale: it.locale,
+        title: it.title,
+        templateId: it.template_id,
+        status: it.status,
+      }));
+      setSearchResults(items);
+      if (isDev) console.debug('[tool] search <- OK', items);
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      setSearchError(msg);
+      if (isDev) console.debug('[tool] search error', e);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function handleSelectGuide(item: GuideSearchItem) {
+    setTemplateId(item.templateId);
+    setCurrentGuideSlug(item.slug);
+    setCurrentGuideTitle(item.title || "");
+    setError("");
+    if (isDev) console.debug('[tool] select guide', item);
+  }
 
   async function handleUpload(): Promise<UploadResult> {
     if (!file) throw new Error(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
@@ -193,6 +265,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       const up = await handleUpload();
       setFormatting(true);
       const body = { file_id: up.file_id, template_id: templateId } as any;
+      const effectiveSlug = currentGuideSlug || guideSlug || "";
+      if (effectiveSlug) body.guide_slug = effectiveSlug;
       if (isDev) console.debug('[tool] format -> POST', `${API_BASE}/format`, body);
       const res = await fetch(`${API_BASE}/format`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) {
@@ -217,18 +291,73 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   return (
     <div className="space-y-6">
-      {/* Context / related guide link (not shown if already displayed in page banner) */}
-      {!guideSlug ? (
-        <section className="rounded-lg border p-4">
-          <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
-          <div className="mt-2 text-sm text-slate-700">
-            <span className="text-xs text-slate-500">{locale === 'zh' ? '无关联指南' : 'No related guide'}</span>
+      {/* Template / guide selection */}
+      <section className="rounded-lg border p-4">
+        <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
+        <div className="mt-1 text-xs text-slate-700">
+          {templateId ? (
+            <>
+              {locale === 'zh' ? '已选择指南：' : 'Selected guide:'}{' '}
+              <span className="font-mono">
+                {currentGuideTitle || currentGuideSlug || guideSlug || (locale === 'zh' ? '（未命名指南）' : '(unnamed guide)')}
+              </span>
+            </>
+          ) : (
+            <span className="text-rose-600">{t("noTemplate")}</span>
+          )}
+        </div>
+        <form onSubmit={handleSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={locale === 'zh' ? '搜索指南或学校名称，例如：APA，USTC' : 'Search guide or institution, e.g. APA, USTC'}
+            className="flex-1 rounded-md border px-2 py-1 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={searching}
+            className={`rounded-md px-3 py-1 text-sm text-white ${searching ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
+          >
+            {searching ? (locale === 'zh' ? '搜索中…' : 'Searching…') : (locale === 'zh' ? '搜索' : 'Search')}
+          </button>
+        </form>
+        {searchError ? (
+          <div className="mt-1 text-xs text-rose-600">{searchError}</div>
+        ) : null}
+        {searchResults.length > 0 ? (
+          <div className="mt-3 max-h-48 space-y-1 overflow-auto text-sm">
+            {searchResults.map((item) => {
+              const selected = item.slug === (currentGuideSlug || guideSlug);
+              return (
+                <button
+                  key={`${item.slug}-${item.locale}`}
+                  type="button"
+                  onClick={() => handleSelectGuide(item)}
+                  className={`flex w-full items-center justify-between rounded border px-2 py-1 text-left ${
+                    selected ? 'border-cyan-500 bg-cyan-50' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <span>
+                    <span className="font-medium">{item.title || item.slug}</span>
+                    <span className="ml-2 font-mono text-xs text-slate-500">{item.slug}</span>
+                  </span>
+                  {selected ? (
+                    <span className="text-xs text-cyan-700">
+                      {locale === 'zh' ? '已选择' : 'Selected'}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
-          {!templateId ? (
-            <div className="mt-2 text-xs text-rose-600">{t("noTemplate")}</div>
-          ) : null}
-        </section>
-      ) : null}
+        ) : null}
+        <div className="mt-3 text-xs text-slate-500">
+          {locale === 'zh'
+            ? '自定义指南模板功能即将上线。'
+            : 'Custom guideline templates will be available soon.'}
+        </div>
+      </section>
 
       {/* Upload */}
       <section className="rounded-lg border p-4">
