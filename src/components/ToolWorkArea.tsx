@@ -65,6 +65,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
   const [searching, setSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string>("");
   const [searchResults, setSearchResults] = React.useState<GuideSearchItem[]>([]);
+  const [lastRequestKey, setLastRequestKey] = React.useState<string>("");
+  const [cooldownUntil, setCooldownUntil] = React.useState<number>(0);
 
   const isDev = process.env.NODE_ENV !== 'production';
   React.useEffect(() => {
@@ -260,6 +262,20 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       setError(t("noTemplate"));
       return;
     }
+    if (!file) {
+      setError(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
+      return;
+    }
+    const now = Date.now();
+    const reqKey = `${file.name}|${file.size}|${templateId}`;
+    if (lastRequestKey === reqKey && cooldownUntil > now) {
+      setError(locale === "zh" ? "请勿短时间内重复提交同一文件" : "Please avoid resubmitting the same file too quickly.");
+      return;
+    }
+    setLastRequestKey(reqKey);
+    const nextCooldown = now + 3000;
+    setCooldownUntil(nextCooldown);
+    setTimeout(() => setCooldownUntil(0), 3000);
     try {
       if (isDev) console.debug('[tool] start formatting', { templateId, guideSlug });
       const up = await handleUpload();
@@ -373,7 +389,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
         <button
           type="button"
           onClick={handleStart}
-          disabled={uploading || formatting}
+          disabled={uploading || formatting || (cooldownUntil > Date.now())}
           className={`rounded-md px-4 py-2 text-sm text-white ${uploading || formatting ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
         >
           {uploading ? t("uploading") : formatting ? t("formatting") : t("start")}
