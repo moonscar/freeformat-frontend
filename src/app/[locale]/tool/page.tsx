@@ -9,6 +9,9 @@ import AnchorNav from '@/components/sections/AnchorNav';
 import ToolWorkArea from '@/components/ToolWorkArea';
 
 export default function ToolPage({ params, searchParams }: { params: { locale: string }; searchParams?: Record<string, string | string[] | undefined> }) {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+  const adsEnabled = isProd && process.env.NEXT_PUBLIC_ADSENSE_ENABLED === '1';
+  const adsClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
   const locale = params.locale === 'en' ? 'en' : 'zh';
   const dict = getT(locale as any);
   const t = dict.tool;
@@ -18,6 +21,17 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
   const isFromGuide = from === 'guide' && !!guideSlug;
   return (
     <>
+      {adsEnabled && adsClient ? (
+        <>
+          <meta name="google-adsense-account" content={adsClient} />
+          <script
+            async
+            crossOrigin="anonymous"
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+            data-ad-client={adsClient}
+          />
+        </>
+      ) : null}
       <Header locale={locale} />
       <HeroSection title={t.heroTitle} desc={t.heroDesc} />
       <main className="mx-auto max-w-3xl px-4 py-10">
