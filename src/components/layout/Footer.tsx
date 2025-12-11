@@ -10,9 +10,6 @@ export default function Footer({ locale }: { locale: string }) {
             <Link href={`/${locale}/privacy`} className="hover:text-slate-900">
               Privacy
             </Link>
-            <Link href={`/${locale}/templates`} className="hover:text-slate-900">
-              Templates
-            </Link>
           </div>
         </div>
       </div>
