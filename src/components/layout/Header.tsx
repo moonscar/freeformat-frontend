@@ -15,12 +15,6 @@ export default function Header({ locale }: { locale: string }) {
           <Link prefetch={false} href={`/${locale}/guides`} className="hover:text-slate-900">
             Guides
           </Link>
-          <Link prefetch={false} href="/en/guides/apa-org" className="hover:text-slate-900">
-            APA
-          </Link>
-          <Link prefetch={false} href="/en/guides/mla-org" className="hover:text-slate-900">
-            MLA
-          </Link>
         </nav>
       </div>
     </header>
