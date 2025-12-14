@@ -10,7 +10,14 @@ type Props = {
 
 type UploadResult = { file_id: string; filename: string; url: string };
 type JobStatus = { job_id: string; status: string; result?: { formatted_doc_url?: string; format_map_url?: string } | null; error?: string | null };
-type GuideSearchItem = { slug: string; locale: string; title?: string | null; templateId: string; status: string };
+type GuideSearchItem = {
+  slug: string;
+  locale: string;
+  title?: string | null;
+  templateId: string;
+  templateTier?: string | null;
+  status: string;
+};
 
 export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
@@ -120,6 +127,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
         locale: it.locale,
         title: it.title,
         templateId: it.template_id,
+        templateTier: it.template_tier,
         status: it.status,
       }));
       setSearchResults(items);
@@ -345,6 +353,25 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
           <div className="mt-3 max-h-48 space-y-1 overflow-auto text-sm">
             {searchResults.map((item) => {
               const selected = item.slug === (currentGuideSlug || guideSlug);
+              const tier = (item.templateTier || "bronze").toLowerCase();
+              const tierLabel =
+                tier === "gold"
+                  ? locale === "zh"
+                    ? "★ Gold 模板"
+                    : "★ Gold template"
+                  : tier === "silver"
+                  ? locale === "zh"
+                    ? "◇ Silver 模板"
+                    : "◇ Silver template"
+                  : locale === "zh"
+                  ? "• Bronze 模板"
+                  : "• Bronze template";
+              const tierClass =
+                tier === "gold"
+                  ? "bg-amber-500/10 text-amber-800 border border-amber-300"
+                  : tier === "silver"
+                  ? "bg-slate-500/10 text-slate-800 border border-slate-300"
+                  : "bg-orange-500/10 text-orange-800 border border-orange-300";
               return (
                 <button
                   key={`${item.slug}-${item.locale}`}
@@ -354,9 +381,16 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
                     selected ? 'border-cyan-500 bg-cyan-50' : 'hover:bg-slate-50'
                   }`}
                 >
-                  <span>
-                    <span className="font-medium">{item.title || item.slug}</span>
-                    <span className="ml-2 font-mono text-xs text-slate-500">{item.slug}</span>
+                  <span className="flex flex-col items-start gap-1">
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900">{item.title || item.slug}</span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${tierClass}`}
+                      >
+                        {tierLabel}
+                      </span>
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-500">{item.slug}</span>
                   </span>
                   {selected ? (
                     <span className="text-xs text-cyan-700">

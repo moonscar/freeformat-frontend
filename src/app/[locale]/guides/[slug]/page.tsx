@@ -16,7 +16,16 @@ type Guide = {
   rawtext_format?: string | null; // md | txt | html
   template_id?: string | null; // optional backend template reference
   source?: { url?: string | null; title?: string | null; version?: string | null; lastChecked?: string | null; sourceType?: string | null } | null;
-  meta?: { entity_type?: string; entity_name?: string; degree_text?: string | null; guide_mode?: string | null; notes?: string | null } | null;
+  meta?: {
+    entity_type?: string;
+    entity_name?: string;
+    degree_text?: string | null;
+    guide_mode?: string | null;
+    notes?: string | null;
+    template_tier?: string | null;
+    template_status?: string | null;
+    template_quality?: string | null;
+  } | null;
   isIntentOnly?: boolean;
   status?: string;
 };
@@ -113,6 +122,27 @@ export default async function Page({ params }: { params: { locale: string; slug:
     guide.slug,
   )}?intent=need-template&pos=hero`;
 
+  const templateTierRaw =
+    guide.meta?.template_tier ||
+    guide.meta?.template_status ||
+    guide.meta?.template_quality ||
+    null;
+  const templateTier = (templateTierRaw || 'bronze').toLowerCase();
+  const templateTierLabel =
+    templateTier === 'gold'
+      ? (isZh ? '★ Gold 模板（推荐）' : '★ Gold template (recommended)')
+      : templateTier === 'silver'
+      ? (isZh ? '◇ Silver 模板（可用）' : '◇ Silver template (good)')
+      : isZh
+      ? '• Bronze 模板（实验）'
+      : '• Bronze template (experimental)';
+  const templateTierClass =
+    templateTier === 'gold'
+      ? 'bg-amber-500/10 text-amber-800 border border-amber-300'
+      : templateTier === 'silver'
+      ? 'bg-slate-500/10 text-slate-800 border border-slate-300'
+      : 'bg-orange-500/10 text-orange-800 border border-orange-300';
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{title}</h1>
@@ -121,6 +151,13 @@ export default async function Page({ params }: { params: { locale: string; slug:
         {entity ? <Badge>{entity}</Badge> : null}
         {degreeText ? <Badge>{degreeText}</Badge> : null}
         {guide.guide_type ? <Badge>{guide.guide_type}</Badge> : null}
+        {hasTemplate ? (
+          <span
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${templateTierClass}`}
+          >
+            {templateTierLabel}
+          </span>
+        ) : null}
       </div>
 
       {/* Actions (use template) + Source card */}
