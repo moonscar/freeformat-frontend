@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
+import { slugifyHeadingId } from '@/lib/headingIds';
 
 type Guide = {
   slug: string;
@@ -246,9 +247,11 @@ export default async function Page({ params }: { params: { locale: string; slug:
             {hasBlocks ? (
               <article className="space-y-8">
                 {blocks.map((b, idx) => (
-                  <section key={b.id || b.title || idx}>
+                  <section key={`${b.id || 'block'}-${idx}`}>
                     {b.title ? (
-                      <h2 className="mb-3 text-2xl font-semibold text-slate-900">{b.title}</h2>
+                      <h2 id={slugifyHeadingId(b.title)} className="mb-3 scroll-mt-24 text-2xl font-semibold text-slate-900">
+                        {b.title}
+                      </h2>
                     ) : null}
                     {b.md ? (
                       <Markdown md={b.md} />

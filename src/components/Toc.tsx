@@ -1,16 +1,7 @@
 "use client";
 
 import React from 'react';
-
-function slugifyId(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+import { slugifyHeadingId } from '@/lib/headingIds';
 
 export default function Toc({ md }: { md: string }) {
   const items = React.useMemo(() => {
@@ -20,7 +11,7 @@ export default function Toc({ md }: { md: string }) {
       if (m) {
         const level = m[1].length;
         const text = m[2].trim();
-        const id = slugifyId(text);
+        const id = slugifyHeadingId(text);
         out.push({ id, text, level });
       }
     }
@@ -30,8 +21,8 @@ export default function Toc({ md }: { md: string }) {
   return (
     <nav className="text-sm">
       <ul className="space-y-1">
-        {items.map((it) => (
-          <li key={it.id} className={it.level === 2 ? '' : 'pl-4'}>
+        {items.map((it, idx) => (
+          <li key={`${it.id}-${idx}`} className={it.level === 2 ? '' : 'pl-4'}>
             <a href={`#${it.id}`} className="text-slate-700 hover:text-slate-900">
               {it.text}
             </a>

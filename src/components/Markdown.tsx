@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { slugifyHeadingId } from "@/lib/headingIds";
 
 function escapeHtml(s: string) {
   return s
@@ -17,16 +18,6 @@ function linkifyPlainUrls(escaped: string) {
     (m) =>
       `<a href="${m}" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:text-cyan-900 underline">${m}</a>`
   );
-}
-
-function slugifyId(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 function inlineMdToHtml(rawText: string) {
@@ -82,7 +73,7 @@ function mdToHtml(md: string) {
       closeList();
       const level = h[1].length;
       const rawText = h[2].trim();
-      const id = slugifyId(rawText);
+      const id = slugifyHeadingId(rawText);
       const text = inlineMdToHtml(rawText);
       const tag = `h${Math.min(level, 6)}`;
       out.push(`<${tag} id="${id}" class="mt-8 mb-3 scroll-mt-24 font-semibold text-slate-900 ${level<=2 ? 'text-2xl' : level===3 ? 'text-xl' : 'text-lg'}">${text}</${tag}>`);
