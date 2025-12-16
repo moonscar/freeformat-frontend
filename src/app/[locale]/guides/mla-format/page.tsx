@@ -5,11 +5,24 @@ import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const isZh = params.locale === 'zh';
+  const localeKey = isZh ? 'zh' : 'en';
+  const canonical = `/${localeKey}/guides/mla-format`;
   return {
     title: isZh ? 'MLA 论文格式 — 指南与 .docx 模板' : 'MLA Paper Format — Guide + .docx Template',
     description: isZh
       ? 'MLA 规范（第 9 版）常用于人文学科。本页覆盖页眉、行距、页边距、标题、字体，以及参考文献（Works Cited）列表的版式。可下载 .docx 模板或一键自动排版。'
       : 'MLA formatting rules for student papers: headers, spacing, margins, headings, fonts, and Works Cited layout. Download a .docx template or auto‑format.',
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/guides/mla-format',
+        zh: '/zh/guides/mla-format',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'article',
+    },
   };
 }
 

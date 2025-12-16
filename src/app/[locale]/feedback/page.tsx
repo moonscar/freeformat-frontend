@@ -2,8 +2,27 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FeedbackForm from '@/components/FeedbackForm';
 import { getT } from '@/i18n';
+import type { Metadata } from 'next';
 
 export const revalidate = 300;
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const canonical = `/${localeKey}/feedback`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/feedback',
+        zh: '/zh/feedback',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default function FeedbackPage({ params }: { params: { locale: string } }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';

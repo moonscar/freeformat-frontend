@@ -7,6 +7,25 @@ import InfoSections from '@/components/sections/InfoSections';
 import FAQ from '@/components/sections/FAQ';
 import AnchorNav from '@/components/sections/AnchorNav';
 import ToolWorkArea from '@/components/ToolWorkArea';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const canonical = `/${localeKey}/tool`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/tool',
+        zh: '/zh/tool',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default function ToolPage({ params, searchParams }: { params: { locale: string }; searchParams?: Record<string, string | string[] | undefined> }) {
   const isProd = process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';

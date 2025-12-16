@@ -1,5 +1,24 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const canonical = `/${localeKey}/privacy`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/privacy',
+        zh: '/zh/privacy',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default function PrivacyPage({ params }: { params: { locale: string } }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';
@@ -44,4 +63,3 @@ export default function PrivacyPage({ params }: { params: { locale: string } }) 
     </>
   );
 }
-

@@ -1,16 +1,11 @@
 import type { Metadata } from 'next';
 import { siteConfig } from '@/lib/siteConfig';
 import Analytics from '@/components/Analytics';
-import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
+import VercelAnalytics from '@/components/VercelAnalytics';
 
 type LayoutProps = {
   children: React.ReactNode;
   params: { locale: string };
-};
-
-const languageAlternates = {
-  en: '/en',
-  zh: '/zh',
 };
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
@@ -25,17 +20,11 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     },
     description: localeConfig.description,
     keywords: Array.from(localeConfig.keywords),
-    alternates: {
-      canonical: `/${localeKey}`,
-      languages: languageAlternates,
-    },
     openGraph: {
       title: localeConfig.title,
       description: localeConfig.description,
-      url: `${siteConfig.url}/${localeKey}`,
       siteName: 'FreeFormat · AI Document Formatter',
       locale: localeConfig.ogLocale,
-      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',

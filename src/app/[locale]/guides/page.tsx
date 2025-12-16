@@ -1,4 +1,23 @@
 import GuideList from '@/components/GuideList';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const canonical = `/${localeKey}/guides`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/guides',
+        zh: '/zh/guides',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default function GuidesIndex({ params }: { params: { locale: string } }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';

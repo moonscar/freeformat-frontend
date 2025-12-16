@@ -55,13 +55,140 @@ async function fetchGuide(slug: string, locale: string): Promise<Guide | null> {
   return (await res.json()) as Guide;
 }
 
+function extractMetaDescriptionFromMarkdown(md: string, maxLen = 160): string | undefined {
+  if (!md) return undefined;
+
+  const clip = (s: string): string | undefined => {
+    const t = s.replace(/\s+/g, ' ').trim();
+    if (!t) return undefined;
+    if (t.length <= maxLen) return t;
+    const clipped = t.slice(0, maxLen - 1).trimEnd();
+    return `${clipped}…`;
+  };
+
+  const toPlain = (src: string): string => {
+    let text = src;
+    text = text.replace(/```[\s\S]*?```/g, '\n');
+    text = text.replace(/<[^>]+>/g, ' ');
+    text = text
+      .split('\n')
+      .filter((line) => {
+        const t = line.trim();
+        if (!t) return true;
+        if (/^#{1,6}\s+/.test(t)) return false;
+        if (/^---+$/.test(t)) return false;
+        return true;
+      })
+      .join('\n');
+    text = text.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1');
+    text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    text = text
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      .replace(/(\*|_)(.*?)\1/g, '$2')
+      .replace(/^\s*>\s?/gm, '')
+      .replace(/["“”]/g, '');
+    return text;
+  };
+
+  const isSentenceLike = (t: string): boolean => {
+    const s = t.trim();
+    if (!s) return false;
+    if (s.length < 30) return false;
+    if (/[。！？.!?]/.test(s)) return true;
+    if (/[:;；：]/.test(s) && s.length >= 40) return true;
+    if (s.length >= 80) return true;
+    return false;
+  };
+
+  const isListLabel = (t: string): boolean => {
+    const s = t.trim();
+    if (!s) return true;
+    if (/[。！？.!?:;；：]/.test(s)) return false;
+    const words = s.split(/\s+/).filter(Boolean);
+    if (words.length <= 4 && s.length <= 32) return true;
+    if (s.length <= 12) return true;
+    return false;
+  };
+
+  const pre = md.replace(/```[\s\S]*?```/g, '\n').replace(/<[^>]+>/g, ' ');
+  const rawBlocks = pre
+    .split(/\n\s*\n/g)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  for (const rawBlock of rawBlocks) {
+    const lines = rawBlock
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const listLines = lines.filter((l) => /^\s*([-*+]|(\d+\.))\s+/.test(l));
+    const looksLikeListBlock = listLines.length >= 2;
+
+    if (looksLikeListBlock) {
+      for (const l of lines) {
+        if (!/^\s*([-*+]|(\d+\.))\s+/.test(l)) continue;
+        const withoutMarker = l.replace(/^\s*([-*+]|(\d+\.))\s+/, '');
+        const plain = clip(toPlain(withoutMarker));
+        if (!plain) continue;
+        if (isListLabel(plain)) continue;
+        if (!isSentenceLike(plain)) continue;
+        return plain;
+      }
+      continue;
+    }
+
+    const plain = clip(toPlain(rawBlock));
+    if (!plain) continue;
+    if (!isSentenceLike(plain)) continue;
+    return plain;
+  }
+
+  const first = rawBlocks[0] ? clip(toPlain(rawBlocks[0])) : undefined;
+  return first;
+}
+
 export async function generateMetadata({ params }: { params: { locale: string; slug: string } }): Promise<Metadata> {
-  const g = await fetchGuide(params.slug, params.locale);
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const otherLocale = localeKey === 'en' ? 'zh' : 'en';
+  const g = await fetchGuide(params.slug, localeKey);
   if (!g) return { title: 'Guide Not Found' };
+
+  const other = await fetchGuide(params.slug, otherLocale);
+  const otherAvailable = !!other && other.locale === otherLocale;
+  const languages = otherAvailable
+    ? {
+        [localeKey]: `/${localeKey}/guides/${encodeURIComponent(params.slug)}`,
+        [otherLocale]: `/${otherLocale}/guides/${encodeURIComponent(params.slug)}`,
+      }
+    : {
+        [localeKey]: `/${localeKey}/guides/${encodeURIComponent(params.slug)}`,
+      };
+
+  const blocks = Array.isArray((g.sections as any)?.blocks)
+    ? ((g.sections as any).blocks as { md?: string }[])
+    : [];
+  const firstMd = blocks.find((b) => !!b?.md)?.md || '';
+  const fallbackDesc =
+    extractMetaDescriptionFromMarkdown(firstMd) ||
+    extractMetaDescriptionFromMarkdown(g.rawtext || '') ||
+    undefined;
+  const description = g.meta_desc || fallbackDesc;
+
   return {
     title: g.meta_title || g.title || `${g.slug} — Guide`,
-    description: g.meta_desc || undefined,
+    description,
     keywords: g.keywords?.items,
+    alternates: {
+      canonical: `/${localeKey}/guides/${encodeURIComponent(params.slug)}`,
+      languages,
+    },
+    openGraph: {
+      title: g.meta_title || g.title || `${g.slug} — Guide`,
+      description,
+      url: `/${localeKey}/guides/${encodeURIComponent(params.slug)}`,
+      type: 'article',
+    },
   };
 }
 

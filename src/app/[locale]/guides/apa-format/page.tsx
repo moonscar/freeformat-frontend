@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const isZh = params.locale === 'zh';
+  const localeKey = isZh ? 'zh' : 'en';
+  const canonical = `/${localeKey}/guides/apa-format`;
   return {
     title: isZh
       ? 'APA 论文格式（第 7 版）— 指南与 .docx 模板'
@@ -12,6 +14,17 @@ export async function generateMetadata({ params }: { params: { locale: string } 
     description: isZh
       ? '掌握 APA 第 7 版：标题页、页眉与页码、标题层级、行距与页边距、字体字号，以及参考文献列表的版式。可下载 .docx 模板或一键自动排版。'
       : 'Learn APA 7: title page, headings, spacing, margins, fonts, page numbers, and references layout. Download a .docx template or format your paper automatically.',
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en/guides/apa-format',
+        zh: '/zh/guides/apa-format',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'article',
+    },
   };
 }
 

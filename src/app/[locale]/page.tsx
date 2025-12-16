@@ -7,8 +7,27 @@ import InfoSections from '@/components/sections/InfoSections';
 import AnchorNav from '@/components/sections/AnchorNav';
 import FAQ from '@/components/sections/FAQ';
 import GuideList from '@/components/GuideList';
+import type { Metadata } from 'next';
 
 const REQUEST_EMAIL = process.env.NEXT_PUBLIC_REQUEST_EMAIL || 'hello@ai-formatter.com';
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const localeKey = params.locale === 'en' ? 'en' : 'zh';
+  const canonical = `/${localeKey}`;
+  return {
+    alternates: {
+      canonical,
+      languages: {
+        en: '/en',
+        zh: '/zh',
+      },
+    },
+    openGraph: {
+      url: canonical,
+      type: 'website',
+    },
+  };
+}
 
 export default function Page({ params }: { params: { locale: string } }) {
   const locale = params.locale === 'en' ? 'en' : 'zh';
