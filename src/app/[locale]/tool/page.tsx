@@ -12,7 +12,17 @@ import type { Metadata } from 'next';
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const localeKey = params.locale === 'en' ? 'en' : 'zh';
   const canonical = `/${localeKey}/tool`;
+  const title =
+    localeKey === 'zh'
+      ? '论文 Word 格式化工具（.docx 自动排版）'
+      : 'Thesis & Word Formatting Tool (.docx Auto‑format)';
+  const description =
+    localeKey === 'zh'
+      ? 'FreeFormat 是一款论文 Word（.docx）格式化与排版工具：选择已有模板或按学校/期刊规范生成模板，一键应用字体字号、行距、页边距、标题层级等格式。'
+      : 'FreeFormat formats Word (.docx) theses and academic papers: pick a template (APA/MLA/school) and auto‑apply fonts, spacing, margins, headings and more.';
   return {
+    title,
+    description,
     alternates: {
       canonical,
       languages: {
@@ -21,6 +31,8 @@ export async function generateMetadata({ params }: { params: { locale: string } 
       },
     },
     openGraph: {
+      title,
+      description,
       url: canonical,
       type: 'website',
     },
