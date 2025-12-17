@@ -47,6 +47,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
   const isZh = locale === 'zh';
   const dict = getT(locale as any);
   const t = dict.tool;
+  const info = dict.landing.info;
   const from = (searchParams?.from as string) || '';
   const guideSlug = (searchParams?.slug as string) || '';
   const templateId = (searchParams?.template_id as string) || '';
@@ -96,8 +97,8 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         </section>
         {/* 工具区占位：后续接入 GuidelineBox / Upload / Templates */}
         <section className="rounded-2xl border border-dashed p-6 text-slate-700">
-          {isFromGuide ? (
-            <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+        {isFromGuide ? (
+          <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <div className="font-medium text-slate-900">
                   {locale === 'zh' ? '已从指南跳转' : 'Came from guide'}
@@ -130,46 +131,32 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
           <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
         </section>
 
-        {/* P2: SEO-friendly sections (Word + thesis) */}
-        <section id="fixes" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-xl font-semibold text-slate-900">
-            {isZh ? 'Word 论文排版常见问题（可自动修复）' : 'Common Word thesis formatting issues we can fix'}
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            {isZh
-              ? '上传你的 Word（.docx）论文并选择模板后，我们会尽量把文档对齐到常见论文版式规范。'
-              : 'Upload your Word (.docx) and pick a template; we will try to align your document to the required thesis/paper layout.'}
-          </p>
-          <ul className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-            <li>{isZh ? '页边距、纸张尺寸（A4/Letter）' : 'Margins & paper size (A4/Letter)'}</li>
-            <li>{isZh ? '行距、段前段后、对齐方式' : 'Line spacing, paragraph spacing & alignment'}</li>
-            <li>{isZh ? '首行缩进（并清理多余空格/Tab）' : 'First-line indent (and remove extra spaces/tabs)'}</li>
-            <li>{isZh ? '标题层级与章节标题样式' : 'Headings hierarchy and section title styles'}</li>
-            <li>{isZh ? '页眉/页脚与页码样式' : 'Header/footer and page numbers'}</li>
-            <li>{isZh ? '图表题注与编号（版式层面）' : 'Captions and numbering (layout only)'}</li>
-          </ul>
-          <p className="mt-3 text-xs text-slate-500">
-            {isZh
-              ? '说明：我们主要处理“版式/排版”（字体、字号、间距、页边距等）；不会改写正文内容。'
-              : 'Note: FreeFormat focuses on layout (fonts, sizes, spacing, margins). We do not rewrite your content.'}
-          </p>
-        </section>
+        {/* Anchor nav + 说明与 FAQ，与反馈页保持一致布局 */}
+        <AnchorNav
+          items={[
+            { href: '#what', label: info.what.title },
+            { href: '#how', label: info.how.title },
+            { href: '#use', label: info.use.title },
+            { href: '#faq', label: info.faq.title },
+          ]}
+        />
+        <InfoSections
+          what={info.what}
+          how={info.how}
+          use={{
+            ...info.use,
+            items: [
+              ...info.use.items,
+              isZh
+                ? '提交前检查清单：纸张与页边距 / 行距与缩进 / 标题层级 / 页码位置 / 图表题注'
+                : 'Pre‑submission checklist: paper & margins / spacing & indent / headings / page numbers / captions',
+            ],
+          }}
+          subheads={info.subheads}
+        />
 
-        <section id="checklist" className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-xl font-semibold text-slate-900">
-            {isZh ? '提交前检查清单（Checklist）' : 'Pre‑submission checklist'}
-          </h2>
-          <ul className="mt-4 space-y-2 text-sm text-slate-700">
-            <li>{isZh ? '纸张与页边距：是否符合学校/期刊要求' : 'Paper size & margins match the requirement'}</li>
-            <li>{isZh ? '正文行距与缩进：是否统一' : 'Body spacing & indentation are consistent'}</li>
-            <li>{isZh ? '标题层级：一级/二级标题样式是否区分清楚' : 'Headings: levels are consistent and distinguishable'}</li>
-            <li>{isZh ? '页码：是否从指定页开始、位置是否正确' : 'Pagination: starts correctly and is placed correctly'}</li>
-            <li>{isZh ? '图表题注：与正文间距与字体是否一致' : 'Captions: spacing and fonts are consistent'}</li>
-          </ul>
-        </section>
-
-        {/* P3: Internal links to popular guides/templates */}
-        <section id="popular" className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
+        {/* Popular guides just above FAQ */}
+        <section id="popular" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="text-xl font-semibold text-slate-900">
             {isZh ? '热门指南与模板（快速开始）' : 'Popular guides & templates (quick start)'}
           </h2>
@@ -194,21 +181,19 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
           </div>
         </section>
 
-        {/* Anchor nav + 说明与 FAQ，与反馈页保持一致布局 */}
-        <AnchorNav
-          items={[
-            { href: '#fixes', label: isZh ? '可修复项' : 'Fixes' },
-            { href: '#checklist', label: isZh ? '检查清单' : 'Checklist' },
-            { href: '#popular', label: isZh ? '热门模板' : 'Popular' },
-            { href: '#what', label: dict.landing.info.what.title },
-            { href: '#how', label: dict.landing.info.how.title },
-            { href: '#use', label: dict.landing.info.use.title },
-            { href: '#faq', label: dict.landing.info.faq.title },
-          ]}
-        />
-        <InfoSections what={dict.landing.info.what} how={dict.landing.info.how} use={dict.landing.info.use} subheads={dict.landing.info.subheads} />
-        <div id="faq">
-          <FAQ title={dict.landing.info.faq.title} items={dict.landing.info.faq.items} />
+        <div id="faq" className="mt-10">
+          <FAQ
+            title={info.faq.title}
+            items={[
+              {
+                q: isZh ? 'Word 论文排版常见问题有哪些？' : 'What Word thesis formatting issues can FreeFormat help with?',
+                a: isZh
+                  ? '常见问题包括：页边距/纸张尺寸、行距与段前段后、首行缩进（以及多余空格/Tab）、标题层级样式、页眉页脚与页码、图表题注与编号等（主要处理版式，不改写正文内容）。'
+                  : 'Common issues include margins/paper size, line spacing and paragraph spacing, first‑line indents (and extra spaces/tabs), heading styles, headers/page numbers, and captions/numbering (layout only; we do not rewrite content).',
+              },
+              ...info.faq.items,
+            ]}
+          />
         </div>
       </main>
       <Footer locale={locale} />
