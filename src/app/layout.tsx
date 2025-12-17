@@ -1,5 +1,5 @@
 import '../styles/globals.css';
-import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
+import VercelAnalytics from '@/components/VercelAnalytics';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

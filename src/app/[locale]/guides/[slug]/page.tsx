@@ -246,6 +246,64 @@ export default async function Page({ params }: { params: { locale: string; slug:
       }
     | null;
 
+  const isGenericSummary = (card: typeof summaryCard): boolean => {
+    if (!card) return true;
+    const p0 = (card.overviewParagraphs || [])[0] || '';
+    if (!p0) return true;
+    if (p0.includes('本页基于官方格式指南')) return true;
+    if (p0.includes('This page summarizes the main layout rules')) return true;
+    if (p0.includes('This page is based on the APA Style')) return true;
+    return false;
+  };
+
+  const effectiveSummaryCard: NonNullable<typeof summaryCard> | null = (() => {
+    const base = summaryCard || null;
+    if (!base) return null;
+    if (!isGenericSummary(base)) return base;
+
+    const pageTitle = guide.title || guide.slug;
+    const entityName = guide.meta?.entity_name || '';
+    const docType =
+      guide.guide_type === 'thesis'
+        ? (isZh ? '学位论文' : 'thesis/dissertation')
+        : guide.guide_type === 'journal'
+        ? (isZh ? '期刊投稿' : 'journal submission')
+        : isZh
+        ? '学术论文'
+        : 'academic paper';
+    const where = entityName ? (isZh ? `（${entityName}）` : ` (${entityName})`) : '';
+
+    const overviewParagraphs = isZh
+      ? [
+          `本页整理自「${pageTitle}」${where}，聚焦 Word（.docx）论文版式：纸张与页边距、行距与段落缩进、字体字号、标题层级、页眉页脚与页码，以及图表题注等关键排版要点。`,
+          '你可以阅读下方的整理版原文来核对细节；也可以点击上方按钮，把模板一键应用到你的 Word 文档，再对照原文进行最终检查。',
+        ]
+      : [
+          `This page is a structured summary of “${pageTitle}”${where}, focusing on Word (.docx) layout: paper & margins, spacing & indentation, fonts, headings, headers/page numbers and basic caption formatting.`,
+          'Read the cleaned guideline below to verify details, or click the button above to apply the template to your Word document and then cross‑check key rules.',
+        ];
+
+    const howSteps = isZh
+      ? [
+          `点击上方“使用本模板格式化文档”，进入工具页（已选中「${pageTitle}」模板）。`,
+          '上传需要按本指南排版的 .docx 文档，发起格式化任务。',
+          '下载排版后的文档，并对照下方原文检查关键格式（必要时手动微调）。',
+        ]
+      : [
+          `Click “Format using this template” to open the tool with the “${pageTitle}” template pre‑selected.`,
+          'Upload the .docx document that should follow this guide and start a formatting job.',
+          'Download the formatted document and cross‑check key details against the original guideline below.',
+        ];
+
+    return {
+      overviewTitle: isZh ? '概览' : 'Overview',
+      overviewParagraphs,
+      howTitle: isZh ? '如何使用 FreeFormat 应用本指南' : 'How to use FreeFormat with this guide',
+      howSteps,
+      sourceLabel: base.sourceLabel,
+    };
+  })();
+
   const intentHref = `/${params.locale}/guides/${encodeURIComponent(
     guide.slug,
   )}?intent=need-template&pos=hero`;
@@ -324,21 +382,21 @@ export default async function Page({ params }: { params: { locale: string; slug:
       </div>
 
       {/* Summary & how-to section (from backend summary.card) */}
-      {summaryCard ? (
+      {effectiveSummaryCard ? (
         <section className="mt-10 mx-auto max-w-[840px]">
           <div className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-md shadow-slate-200/70">
-            <h2 className="mb-3 text-2xl font-semibold text-slate-900">{summaryCard.overviewTitle}</h2>
+            <h2 className="mb-3 text-2xl font-semibold text-slate-900">{effectiveSummaryCard.overviewTitle}</h2>
             <div className="space-y-3 text-slate-800">
-              {(summaryCard.overviewParagraphs || []).map((p, idx) => (
+              {(effectiveSummaryCard.overviewParagraphs || []).map((p, idx) => (
                 <p key={idx} className="leading-7">
                   {p}
                 </p>
               ))}
             </div>
             <div className="mt-6">
-              <h3 className="text-base font-semibold text-slate-900">{summaryCard.howTitle}</h3>
+              <h3 className="text-base font-semibold text-slate-900">{effectiveSummaryCard.howTitle}</h3>
               <ol className="mt-2 space-y-2 text-sm text-slate-700">
-                {(summaryCard.howSteps || []).map((s, index) => (
+                {(effectiveSummaryCard.howSteps || []).map((s, index) => (
                   <li key={index} className="flex gap-2">
                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[11px] font-semibold text-cyan-700 ring-1 ring-cyan-200">
                       {index + 1}
@@ -347,7 +405,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
                   </li>
                 ))}
               </ol>
-              {guide.source?.url && summaryCard.sourceLabel ? (
+              {guide.source?.url && effectiveSummaryCard.sourceLabel ? (
                 <p className="mt-4 text-xs text-slate-500">
                   {isZh ? '来源：' : 'Source: '}{' '}
                   <a
@@ -356,7 +414,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
                     rel="noopener noreferrer"
                     className="text-cyan-700 hover:text-cyan-900 underline"
                   >
-                    {summaryCard.sourceLabel}
+                    {effectiveSummaryCard.sourceLabel}
                   </a>
                 </p>
               ) : null}
