@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
 
-  const staticRoutes = ['', '/tool', '/guides', '/feedback', '/privacy'];
+  const staticRoutes = ['', '/tool', '/guides', '/feedback', '/privacy', '/landing'];
 
   const guideEntries: MetadataRoute.Sitemap = [];
   for (const locale of locales) {
@@ -37,7 +37,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     locales.map((locale) => ({
       url: `${baseUrl}/${locale}${path}`,
       changeFrequency: 'weekly' as const,
-      priority: path === '' ? 1 : path === '/tool' ? 0.9 : path === '/guides' ? 0.7 : path === '/feedback' ? 0.4 : 0.2,
+      priority:
+        path === ''
+          ? 1
+          : path === '/tool'
+          ? 0.9
+          : path === '/guides'
+          ? 0.7
+          : path === '/feedback'
+          ? 0.4
+          : path === '/landing'
+          ? 0.3
+          : 0.2,
       lastModified: new Date(),
     }))
   );
