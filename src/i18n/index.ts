@@ -6,7 +6,7 @@ const pages = {
     common: {
       siteTitle: 'FreeFormat – AI 文档自动排版（毕业论文与学术文档）',
       siteDesc:
-        'FreeFormat 是一款 AI 文档排版工具（AI document formatter），优先支持毕业论文与期刊论文。上传/粘贴格式要求生成模板，一键将 APA、MLA 或学校要求应用到 docx。',
+        'FreeFormat 是一款论文 Word（.docx）自动排版工具，优先支持毕业论文与期刊论文。选择已有模板（APA、MLA 或学校论文格式），一键应用字体字号、行距、页边距与标题层级。',
     },
     landing: {
       badge: '内测优先通道 · 免费试用',
@@ -36,11 +36,10 @@ const pages = {
         how: {
           title: '如何使用？',
           steps: [
-            '粘贴或上传格式要求（可包含 APA / MLA / 学校自定义要求）',
-            '我们生成/校验模板（常见规范提供预置模板）',
-            '上传 .docx 论文或学术文档',
-            '发起格式化，一键应用论文版式规范',
-            '下载排版后的文档，查看差异（即将）',
+            '选择一个已有的指南/模板（如 APA、MLA 或学校论文模板）',
+            '上传你的 Word（.docx）论文或学术文档',
+            '点击“开始格式化”，自动应用字体字号、行距、页边距与标题层级等版式规则',
+            '下载排版后的文档，并对照学校/期刊要求做最终检查',
           ],
         },
         use: {
@@ -64,7 +63,7 @@ const pages = {
     },
     tool: {
       heroTitle: '论文 Word 格式化工具',
-      heroDesc: '支持毕业论文与期刊论文：选择模板或粘贴格式要求生成模板；上传 Word（.docx）一键应用字体字号、行距、页边距与标题层级。',
+      heroDesc: '支持毕业论文与期刊论文：选择已有模板，上传 Word（.docx）一键应用字体字号、行距、页边距与标题层级。',
       placeholderTitle: '工具区（即将开放）',
       placeholderDesc: '我们正在完善模板选择、上传与格式化流程。欢迎先在首页提交你的格式要求。',
       links: { templates: '模板列表', privacy: '隐私与使用限制' },
@@ -74,7 +73,7 @@ const pages = {
     common: {
       siteTitle: 'FreeFormat – AI Document Formatter for Theses & Academic Papers',
       siteDesc:
-        'FreeFormat is an AI document formatter that turns your guideline into a template and applies the right thesis format or academic paper format to your .docx.',
+        'FreeFormat is a Word (.docx) document formatter for theses and academic papers: pick an existing template (APA/MLA/school) and apply fonts, spacing, margins and headings automatically.',
     },
     landing: {
       badge: 'Early Access · Free While In Beta',
@@ -104,11 +103,10 @@ const pages = {
         how: {
           title: 'How to use',
           steps: [
-            'Paste or upload your formatting guideline (APA, MLA or custom)',
-            'We build/verify a template (popular thesis and academic paper formats pre‑built)',
-            'Upload your .docx thesis or academic paper',
-            'Start formatting with the right thesis format / academic paper format',
-            'Download and review the diff (soon)',
+            'Pick an existing guide/template (e.g., APA, MLA, or a school thesis template)',
+            'Upload your Word (.docx) thesis or academic paper',
+            'Click “Start formatting” to apply fonts, spacing, margins and heading styles automatically',
+            'Download the formatted document and cross‑check against the official requirements',
           ],
         },
         use: {
@@ -132,7 +130,7 @@ const pages = {
     },
     tool: {
       heroTitle: 'Thesis & Word Formatting Tool',
-      heroDesc: 'Format theses and academic papers in Word (.docx): pick a template or paste guidelines to build one, then apply fonts, spacing, margins and headings automatically.',
+      heroDesc: 'Format theses and academic papers in Word (.docx): pick an existing template and apply fonts, spacing, margins and headings automatically.',
       placeholderTitle: 'Tool area (coming soon)',
       placeholderDesc: 'We are implementing template picking, upload and formatting. Meanwhile, submit your guideline on the landing page.',
       links: { templates: 'Templates', privacy: 'Privacy' },

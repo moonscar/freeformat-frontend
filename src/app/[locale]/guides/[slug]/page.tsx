@@ -360,9 +360,9 @@ export default async function Page({ params }: { params: { locale: string; slug:
             <a
               href={toolHref}
               className="inline-flex items-center rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-200"
-              title={isZh ? '未找到模板，前往工具页选择或生成' : 'No template found; go to tool to select or create'}
+              title={isZh ? '前往工具页选择模板并格式化文档' : 'Go to tool to pick a template and format your document'}
             >
-              {isZh ? '前往工具页（选择/生成模板）' : 'Go to tool (select/create template)'}
+              {isZh ? '前往工具页' : 'Go to tool'}
             </a>
           )}
           {isIntentOnly ? (
@@ -376,7 +376,7 @@ export default async function Page({ params }: { params: { locale: string; slug:
           {hasTemplate ? (
             <span className="text-xs text-slate-500">{isZh ? '已提供模板' : 'Template available'}</span>
           ) : (
-            <span className="text-xs text-slate-500">{isZh ? '暂无模板，工具页可选择/生成' : 'No template; choose/create in tool'}</span>
+            <span className="text-xs text-slate-500">{isZh ? '暂无模板，可在工具页选择其他模板' : 'No template yet; pick another template in the tool'}</span>
           )}
         </div>
       </div>

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
       : 'Thesis & Word Formatting Tool (.docx Auto‑format)';
   const description =
     localeKey === 'zh'
-      ? 'FreeFormat 是一款论文 Word（.docx）格式化与排版工具：选择已有模板或按学校/期刊规范生成模板，一键应用字体字号、行距、页边距、标题层级等格式。'
+      ? 'FreeFormat 是一款论文 Word（.docx）格式化与排版工具：选择已有模板（如 APA/MLA/学校论文格式），一键应用字体字号、行距、页边距、标题层级等格式。'
       : 'FreeFormat formats Word (.docx) theses and academic papers: pick a template (APA/MLA/school) and auto‑apply fonts, spacing, margins, headings and more.';
   return {
     title,
@@ -121,11 +121,6 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
                   {locale === 'zh' ? '更换模板' : 'Change template'}
                 </a>
               </div>
-              {!templateId ? (
-                <div className="mt-1 text-xs text-rose-600">
-                  {locale === 'zh' ? '未检测到模板，请下方选择/生成或返回指南页。' : 'No template detected. Select/create below or go back to guide.'}
-                </div>
-              ) : null}
             </div>
           ) : null}
           <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
