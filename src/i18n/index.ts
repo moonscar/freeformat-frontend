@@ -53,10 +53,17 @@ const pages = {
         faq: {
           title: '常见问题',
           items: [
+            {
+              q: 'FreeFormat 能一键修哪些格式？',
+              a: '重点解决重复且易错的版式：行距/段距/首行缩进（含清理空格/Tab）、正文与标题样式统一（支持多级标题）、参考文献条目版式（悬挂缩进等）、表题/图题等题注样式。',
+            },
             { q: '会修改正文内容吗？', a: '不会。系统仅调整样式与排版，不会更改正文语义。' },
-            { q: '支持哪些场景？', a: '当前重点支持毕业论文与期刊论文，后续扩展更多规范。' },
+            {
+              q: '哪些内容暂时不保证？',
+              a: '复杂页眉页脚与分节页码、Word 公式对象的精细排版、表格内部的所有细节样式、中英混排“字符级”分字体、参考文献条目的内容规范（字段顺序/标点等）。',
+            },
             { q: '我的文件安全吗？', a: '仅用于排版处理，产物会在一段时间后清理。详见隐私说明。' },
-            { q: '失败如何处理？', a: '可重试并提供原始指南；我们会持续改进模板，并提供人工确认路径。' },
+            { q: '效果不理想怎么办？', a: '先换一个模板再试；如果仍不理想，请在反馈页描述“哪里不对”（如标题字号/行距），并附上学校/期刊要求链接。' },
           ],
         },
       },
@@ -120,10 +127,17 @@ const pages = {
         faq: {
           title: 'FAQ',
           items: [
+            {
+              q: 'What formatting issues can FreeFormat fix automatically?',
+              a: 'It focuses on repetitive layout tasks: spacing and indents (including removing extra spaces/tabs), consistent body & heading styles (multi‑level headings), reference list layout (e.g., hanging indents), and caption styles for tables/figures.',
+            },
             { q: 'Do you change my content?', a: 'No. We only apply styles and layout, not the text itself.' },
-            { q: 'What scenarios are supported?', a: 'We prioritize theses and journal submissions and will expand further.' },
+            {
+              q: 'What is not guaranteed yet?',
+              a: 'Complex headers/footers and section‑based page numbering, fine‑grained Word equation objects, all table‑internal styling details, character‑level mixed‑language font rules, and citation/reference content rules (field order/punctuation).',
+            },
             { q: 'Is my file safe?', a: 'Files are processed for formatting only and cleaned up later. See Privacy.' },
-            { q: 'What if formatting fails?', a: 'Retry and share the guideline; we keep improving templates and provide a human‑in‑the‑loop path.' },
+            { q: 'What if results look wrong?', a: 'Try another template first. If issues persist, send feedback with what is wrong (e.g., heading size/spacing) and the official guideline link.' },
           ],
         },
       },

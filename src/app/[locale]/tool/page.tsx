@@ -177,18 +177,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         </section>
 
         <div id="faq" className="mt-10">
-          <FAQ
-            title={info.faq.title}
-            items={[
-              {
-                q: isZh ? 'Word 论文排版常见问题有哪些？' : 'What Word thesis formatting issues can FreeFormat help with?',
-                a: isZh
-                  ? '常见问题包括：页边距/纸张尺寸、行距与段前段后、首行缩进（以及多余空格/Tab）、标题层级样式、页眉页脚与页码、图表题注与编号等（主要处理版式，不改写正文内容）。'
-                  : 'Common issues include margins/paper size, line spacing and paragraph spacing, first‑line indents (and extra spaces/tabs), heading styles, headers/page numbers, and captions/numbering (layout only; we do not rewrite content).',
-              },
-              ...info.faq.items,
-            ]}
-          />
+          <FAQ title={info.faq.title} items={info.faq.items} />
         </div>
       </main>
       <Footer locale={locale} />
