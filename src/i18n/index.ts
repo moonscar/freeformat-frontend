@@ -9,12 +9,12 @@ const pages = {
         'FreeFormat 是一款论文 Word（.docx）自动排版工具，优先支持毕业论文与期刊论文。选择已有模板（APA、MLA 或学校论文格式），一键应用字体字号、行距、页边距与标题层级。',
     },
     landing: {
-      badge: '内测优先通道 · 免费试用',
+      badge: '免费试用 · 论文 Word 自动排版',
       heroTitle: 'FreeFormat · AI 文档排版工具',
       heroDesc:
         'FreeFormat 是一款面向毕业论文与期刊论文的 AI 文档排版工具。欢迎提交你正在/即将面临的格式要求，我们将优先适配 thesis format / academic paper format，并回信告知进度。',
       cta: { primary: '立即提交格式', secondary: '查看模板' },
-      features: { title: '核心功能', items: ['支持毕业论文与期刊论文', 'docx 解析', '模板应用', '差异报告（即将）'] },
+      features: { title: '核心功能', items: ['支持毕业论文与期刊论文', 'docx 解析', '模板应用'] },
       howItWorks: { title: '工作原理', steps: ['发送格式要求到邮箱', '我们生成模板并回信', '正式版上线后一键排版并下载'] },
       links: { title: '更多', templates: '模板列表', privacy: '隐私与使用限制' },
       inline: {
@@ -71,8 +71,8 @@ const pages = {
     tool: {
       heroTitle: '论文 Word 格式化工具',
       heroDesc: '支持毕业论文与期刊论文：选择已有模板，上传 Word（.docx）一键应用字体字号、行距、页边距与标题层级。',
-      placeholderTitle: '工具区（即将开放）',
-      placeholderDesc: '我们正在完善模板选择、上传与格式化流程。欢迎先在首页提交你的格式要求。',
+      placeholderTitle: '工具区',
+      placeholderDesc: '选择模板并上传 .docx 开始格式化。',
       links: { templates: '模板列表', privacy: '隐私与使用限制' },
     },
   },
@@ -83,12 +83,12 @@ const pages = {
         'FreeFormat is a Word (.docx) document formatter for theses and academic papers: pick an existing template (APA/MLA/school) and apply fonts, spacing, margins and headings automatically.',
     },
     landing: {
-      badge: 'Early Access · Free While In Beta',
+      badge: 'Free trial · Thesis & Word auto‑format',
       heroTitle: 'FreeFormat · AI Document Formatter',
       heroDesc:
         'FreeFormat is an AI document formatter for theses and academic papers. Send us your guideline – we focus on thesis format and academic paper format first and will reply with progress updates.',
       cta: { primary: 'Submit a guideline', secondary: 'Explore templates' },
-      features: { title: 'Features', items: ['Supports theses and journal papers', 'Docx parsing', 'Template styling', 'Diff report (soon)'] },
+      features: { title: 'Features', items: ['Supports theses and journal papers', 'Docx parsing', 'Template styling'] },
       howItWorks: { title: 'How it works', steps: ['Email us your guideline', 'We build a template & reply', 'Format & download when GA is ready'] },
       links: { title: 'More', templates: 'Templates', privacy: 'Privacy & Usage Limits' },
       inline: {
@@ -145,8 +145,8 @@ const pages = {
     tool: {
       heroTitle: 'Thesis & Word Formatting Tool',
       heroDesc: 'Format theses and academic papers in Word (.docx): pick an existing template and apply fonts, spacing, margins and headings automatically.',
-      placeholderTitle: 'Tool area (coming soon)',
-      placeholderDesc: 'We are implementing template picking, upload and formatting. Meanwhile, submit your guideline on the landing page.',
+      placeholderTitle: 'Tool area',
+      placeholderDesc: 'Pick a template and upload a .docx to start formatting.',
       links: { templates: 'Templates', privacy: 'Privacy' },
     },
   },

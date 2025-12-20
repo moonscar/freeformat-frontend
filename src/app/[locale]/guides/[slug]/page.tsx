@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
 import { slugifyHeadingId } from '@/lib/headingIds';
+import { redirect } from 'next/navigation';
 
 type Guide = {
   slug: string;
@@ -198,6 +199,15 @@ function Badge({ children }: { children: React.ReactNode }) {
 
 export default async function Page({ params }: { params: { locale: string; slug: string } }) {
   const isZh = params.locale === 'zh';
+
+  // Legacy slugs (previous static pages): keep URLs working without maintaining duplicate/placeholder pages.
+  if (params.slug === 'apa-format') {
+    redirect(`/${isZh ? 'zh' : 'en'}/guides/apa-org`);
+  }
+  if (params.slug === 'mla-format') {
+    redirect(`/${isZh ? 'zh' : 'en'}/guides/mla-org`);
+  }
+
   const guide = await fetchGuide(params.slug, params.locale);
   if (!guide) {
     return (
@@ -209,7 +219,8 @@ export default async function Page({ params }: { params: { locale: string; slug:
   }
 
   const title = guide.title || guide.slug;
-  const sub = [guide.guide_type || 'guide', guide.version || guide.source?.version].filter(Boolean).join(' • ');
+  const subType = guide.guide_type || (isZh ? '指南' : 'guide');
+  const sub = [subType, guide.version || guide.source?.version].filter(Boolean).join(' • ');
   const entity = guide.meta?.entity_name || '';
   const degreeText = guide.meta?.degree_text || '';
   const guideMode = guide.meta?.guide_mode || 'full';
@@ -320,8 +331,8 @@ export default async function Page({ params }: { params: { locale: string; slug:
       : templateTier === 'silver'
       ? (isZh ? '◇ Silver 模板（可用）' : '◇ Silver template (good)')
       : isZh
-      ? '• Bronze 模板（实验）'
-      : '• Bronze template (experimental)';
+      ? '• Bronze 模板'
+      : '• Bronze template';
   const templateTierClass =
     templateTier === 'gold'
       ? 'bg-amber-500/10 text-amber-800 border border-amber-300'

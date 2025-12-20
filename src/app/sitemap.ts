@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
 
-  const staticRoutes = ['', '/tool', '/guides', '/feedback', '/privacy', '/landing'];
+  const staticRoutes = ['', '/tool', '/guides', '/feedback', '/privacy', '/terms', '/contact', '/about', '/support', '/landing'];
 
   const guideEntries: MetadataRoute.Sitemap = [];
   for (const locale of locales) {

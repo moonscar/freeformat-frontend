@@ -404,8 +404,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
         ) : null}
         <div className="mt-3 text-xs text-slate-500">
           {locale === 'zh'
-            ? '自定义指南模板功能即将上线。'
-            : 'Custom guideline templates will be available soon.'}
+            ? '当前仅支持使用已提供的模板进行格式化。'
+            : 'Currently, only existing templates are supported.'}
         </div>
       </section>
 

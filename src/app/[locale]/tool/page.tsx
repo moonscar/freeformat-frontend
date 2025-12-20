@@ -90,12 +90,11 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
       <main className="mx-auto max-w-3xl px-4 py-10">
         <section className="mb-4 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">
           {locale === 'zh' ? (
-            <p>根据指南自定义模板功能即将上线，目前请先使用已提供的模板进行格式化。</p>
+            <p>当前仅支持使用已提供的模板进行格式化（暂不支持上传指南生成模板）。</p>
           ) : (
-            <p>Custom templates based on your own guideline will be available soon. For now, please use the existing templates.</p>
+            <p>Currently, only existing templates are supported (we do not build templates from uploaded guidelines).</p>
           )}
         </section>
-        {/* 工具区占位：后续接入 GuidelineBox / Upload / Templates */}
         <section className="rounded-2xl border border-dashed p-6 text-slate-700">
         {isFromGuide ? (
           <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
