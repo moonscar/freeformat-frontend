@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
+import GuideCheckModule from '@/components/GuideCheckModule';
 import { slugifyHeadingId } from '@/lib/headingIds';
 import { redirect } from 'next/navigation';
 
@@ -391,6 +392,14 @@ export default async function Page({ params }: { params: { locale: string; slug:
           )}
         </div>
       </div>
+
+      {hasTemplate && guide.template_id ? (
+        <GuideCheckModule
+          locale={params.locale}
+          templateId={guide.template_id}
+          guideTitle={guide.title || guide.slug}
+        />
+      ) : null}
 
       {/* Summary & how-to section (from backend summary.card) */}
       {effectiveSummaryCard ? (

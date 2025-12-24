@@ -55,15 +55,21 @@ const pages = {
           items: [
             {
               q: 'FreeFormat 能一键修哪些格式？',
-              a: '重点解决重复且易错的版式：行距/段距/首行缩进（含清理空格/Tab）、正文与标题样式统一（支持多级标题）、参考文献条目版式（悬挂缩进等）、表题/图题等题注样式。',
+              a: '重点解决重复且易错的版式：行距/段距/首行缩进（含清理空格/Tab）、正文与标题样式统一（支持多级标题/三级标题尽力而为）、参考文献“版式”（如悬挂缩进、行距等）、表题/图题等题注段落样式。',
             },
             { q: '会修改正文内容吗？', a: '不会。系统仅调整样式与排版，不会更改正文语义。' },
             {
-              q: '哪些内容暂时不保证？',
-              a: '复杂页眉页脚与分节页码、Word 公式对象的精细排版、表格内部的所有细节样式、中英混排“字符级”分字体、参考文献条目的内容规范（字段顺序/标点等）。',
+              q: '哪些内容目前不支持或不保证？',
+              a: '复杂页眉页脚与“分节页码”（如正文从 1 开始、罗马数字/阿拉伯数字混用）、目录（TOC）字段本体的修复与自动更新、多级编号体系的重建/纠错、Word 原生公式对象（OMML）的精细排版、表格内部所有细节样式、中英混排“字符级”分字体、参考文献条目的内容规范（字段顺序/标点等）。',
             },
-            { q: '我的文件安全吗？', a: '仅用于排版处理，产物会在一段时间后清理。详见隐私说明。' },
-            { q: '效果不理想怎么办？', a: '先换一个模板再试；如果仍不理想，请在反馈页描述“哪里不对”（如标题字号/行距），并附上学校/期刊要求链接。' },
+            {
+              q: '目录（TOC）/页码/多级编号问题能自动修好吗？',
+              a: '目前主要保证“样式统一”，不保证自动修复 Word 的目录字段、分节页码与多级编号系统。通常建议：先用 FreeFormat 统一标题样式，再在 Word 中手动“更新目录/更新域”。',
+            },
+            {
+              q: 'Track Changes（修订）会影响排版吗？',
+              a: '可能会。修订状态下 Word 的格式行为更复杂，结果不一定稳定。建议在格式化前先接受/拒绝修订并清理批注后再上传。',
+            },
           ],
         },
       },
@@ -129,15 +135,21 @@ const pages = {
           items: [
             {
               q: 'What formatting issues can FreeFormat fix automatically?',
-              a: 'It focuses on repetitive layout tasks: spacing and indents (including removing extra spaces/tabs), consistent body & heading styles (multi‑level headings), reference list layout (e.g., hanging indents), and caption styles for tables/figures.',
+              a: 'It focuses on repetitive layout tasks: spacing and indents (including removing extra spaces/tabs), consistent body & heading styles (multi‑level headings; level‑3 best effort), reference list layout (e.g., hanging indents/spacing), and caption paragraph styles for tables/figures.',
             },
             { q: 'Do you change my content?', a: 'No. We only apply styles and layout, not the text itself.' },
             {
-              q: 'What is not guaranteed yet?',
-              a: 'Complex headers/footers and section‑based page numbering, fine‑grained Word equation objects, all table‑internal styling details, character‑level mixed‑language font rules, and citation/reference content rules (field order/punctuation).',
+              q: 'What is not supported or not guaranteed yet?',
+              a: 'Complex headers/footers and section‑based page numbering (e.g., Roman vs Arabic, start at 1 after front matter), fixing/updating TOC fields, rebuilding/fixing multi‑level numbering systems, fine‑grained Word equation objects (OMML), all table‑internal styling details, character‑level mixed‑language font rules, and citation/reference content rules (field order/punctuation).',
             },
-            { q: 'Is my file safe?', a: 'Files are processed for formatting only and cleaned up later. See Privacy.' },
-            { q: 'What if results look wrong?', a: 'Try another template first. If issues persist, send feedback with what is wrong (e.g., heading size/spacing) and the official guideline link.' },
+            {
+              q: 'Can you automatically fix TOC/page numbers/multi‑level numbering issues?',
+              a: 'Not reliably yet. FreeFormat mainly guarantees style consistency. A common workflow is: apply heading styles with FreeFormat, then update the TOC/fields in Word.',
+            },
+            {
+              q: 'Will Track Changes affect formatting?',
+              a: 'It can. Track Changes makes Word formatting behavior more complex and may reduce stability. For best results, accept/reject changes and remove comments before uploading.',
+            },
           ],
         },
       },
