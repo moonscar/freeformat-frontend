@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
 import { slugifyHeadingId } from '@/lib/headingIds';
-import { redirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 
 type Guide = {
   slug: string;
@@ -152,6 +152,37 @@ function extractMetaDescriptionFromMarkdown(md: string, maxLen = 160): string | 
 export async function generateMetadata({ params }: { params: { locale: string; slug: string } }): Promise<Metadata> {
   const localeKey = params.locale === 'en' ? 'en' : 'zh';
   const otherLocale = localeKey === 'en' ? 'zh' : 'en';
+
+  // Deindex thin/placeholder pages (keep follow for internal discovery).
+  if (localeKey === 'en' && (params.slug === 'proquest' || params.slug === 'ucl-edu')) {
+    return {
+      title: params.slug,
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: `/${localeKey}/guides/${encodeURIComponent(params.slug)}`,
+        languages: {
+          en: `/en/guides/${encodeURIComponent(params.slug)}`,
+          zh: `/zh/guides/${encodeURIComponent(params.slug)}`,
+        },
+      },
+    };
+  }
+
+  // Legacy duplicate: prefer apa-org.
+  if (localeKey === 'en' && params.slug === 'apa-format') {
+    return {
+      title: 'APA Style — Paper format (7th edition)',
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: '/en/guides/apa-org',
+        languages: {
+          en: '/en/guides/apa-org',
+          zh: '/zh/guides/apa-org',
+        },
+      },
+    };
+  }
+
   const g = await fetchGuide(params.slug, localeKey);
   if (!g) return { title: 'Guide Not Found' };
 
@@ -202,10 +233,10 @@ export default async function Page({ params }: { params: { locale: string; slug:
 
   // Legacy slugs (previous static pages): keep URLs working without maintaining duplicate/placeholder pages.
   if (params.slug === 'apa-format') {
-    redirect(`/${isZh ? 'zh' : 'en'}/guides/apa-org`);
+    permanentRedirect(`/${isZh ? 'zh' : 'en'}/guides/apa-org`);
   }
   if (params.slug === 'mla-format') {
-    redirect(`/${isZh ? 'zh' : 'en'}/guides/mla-org`);
+    permanentRedirect(`/${isZh ? 'zh' : 'en'}/guides/mla-org`);
   }
 
   const guide = await fetchGuide(params.slug, params.locale);
