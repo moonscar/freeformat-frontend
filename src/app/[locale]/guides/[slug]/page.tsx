@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
 import GuideCheckModule from '@/components/GuideCheckModule';
+import ValueModules from '@/components/ValueModules';
 import { slugifyHeadingId } from '@/lib/headingIds';
 import { permanentRedirect } from 'next/navigation';
 
@@ -251,10 +252,60 @@ export default async function Page({ params }: { params: { locale: string; slug:
   }
 
   const title = guide.title || guide.slug;
-  const subType = guide.guide_type || (isZh ? '指南' : 'guide');
-  const sub = [subType, guide.version || guide.source?.version].filter(Boolean).join(' • ');
+  const hasTemplate = !!guide.template_id;
+
+  const templateTierRaw =
+    guide.meta?.template_tier ||
+    guide.meta?.template_status ||
+    guide.meta?.template_quality ||
+    null;
+  const templateTier = (templateTierRaw || 'bronze').toLowerCase();
+  const templateTierLabel =
+    templateTier === 'gold'
+      ? (isZh ? '★ Gold 模板（推荐）' : '★ Gold template (recommended)')
+      : templateTier === 'silver'
+      ? (isZh ? '◇ Silver 模板（可用）' : '◇ Silver template (good)')
+      : isZh
+      ? '• Bronze 模板'
+      : '• Bronze template';
+  const templateTierClass =
+    templateTier === 'gold'
+      ? 'bg-amber-500/10 text-amber-800 border border-amber-300'
+      : templateTier === 'silver'
+      ? 'bg-slate-500/10 text-slate-800 border border-slate-300'
+      : 'bg-orange-500/10 text-orange-800 border border-orange-300';
+
+  const guideType = (guide.guide_type || '').toLowerCase();
+  const guideTypeLabel =
+    guideType === 'thesis'
+      ? isZh
+        ? '论文格式'
+        : 'Thesis format'
+      : guideType === 'journal'
+      ? isZh
+        ? '期刊/会议'
+        : 'Journal / conference'
+      : guideType === 'style'
+      ? isZh
+        ? '写作/格式规范'
+        : 'Style guide'
+      : isZh
+      ? '指南'
+      : 'Guide';
+  const metaSourceTitle = guide.source?.title || guide.meta?.entity_name || '';
+  const metaLine = [
+    metaSourceTitle,
+    guideTypeLabel,
+    guide.version || guide.source?.version,
+  ]
+    .filter(Boolean)
+    .join(' • ');
   const entity = guide.meta?.entity_name || '';
   const degreeText = guide.meta?.degree_text || '';
+  const showEntityBadge =
+    !!entity &&
+    entity.toLowerCase() !== title.toLowerCase() &&
+    (!!metaSourceTitle ? entity.toLowerCase() !== metaSourceTitle.toLowerCase() : true);
   const guideMode = guide.meta?.guide_mode || 'full';
   const isIntentOnly = guide.isIntentOnly ?? guideMode === 'intent_only';
   const raw = guide.rawtext || '';
@@ -274,10 +325,12 @@ export default async function Page({ params }: { params: { locale: string; slug:
     : hasMd
     ? raw
     : '';
-  const hasTemplate = !!guide.template_id;
   const toolHref = hasTemplate
     ? `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
     : `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}`;
+  const checkHref = '#format-check';
+  const valueModules = ((guide.sections as any)?.value_modules || []) as any[];
+  const hasValueModules = Array.isArray(valueModules) && valueModules.some((m) => (m?.title || m?.md));
 
   const summaryCard = (guide.sections as any)?.summary?.card as
     | {
@@ -301,49 +354,35 @@ export default async function Page({ params }: { params: { locale: string; slug:
 
   const effectiveSummaryCard: NonNullable<typeof summaryCard> | null = (() => {
     const base = summaryCard || null;
-    if (!base) return null;
-    if (!isGenericSummary(base)) return base;
+    if (base && !isGenericSummary(base)) return base;
 
     const pageTitle = guide.title || guide.slug;
-    const entityName = guide.meta?.entity_name || '';
-    const docType =
-      guide.guide_type === 'thesis'
-        ? (isZh ? '学位论文' : 'thesis/dissertation')
-        : guide.guide_type === 'journal'
-        ? (isZh ? '期刊投稿' : 'journal submission')
-        : isZh
-        ? '学术论文'
-        : 'academic paper';
-    const where = entityName ? (isZh ? `（${entityName}）` : ` (${entityName})`) : '';
+    const sourceLabel = base?.sourceLabel || guide.source?.title || (isZh ? '官方格式指南来源' : 'Official guideline source');
 
     const overviewParagraphs = isZh
-      ? [
-          `本页整理自「${pageTitle}」${where}，聚焦 Word（.docx）论文版式：纸张与页边距、行距与段落缩进、字体字号、标题层级、页眉页脚与页码，以及图表题注等关键排版要点。`,
-          '你可以阅读下方的整理版原文来核对细节；也可以点击上方按钮，把模板一键应用到你的 Word 文档，再对照原文进行最终检查。',
-        ]
+      ? [`本页用于将「${pageTitle}」的版式要求落地到 Word（.docx）：你可以直接使用模板格式化，也可以上传文档做一次格式检查。`]
       : [
-          `This page is a structured summary of “${pageTitle}”${where}, focusing on Word (.docx) layout: paper & margins, spacing & indentation, fonts, headings, headers/page numbers and basic caption formatting.`,
-          'Read the cleaned guideline below to verify details, or click the button above to apply the template to your Word document and then cross‑check key rules.',
+          `Use this page to apply “${pageTitle}” formatting to Word (.docx): format with the template, or upload a document to run a format check.`,
         ];
 
     const howSteps = isZh
       ? [
           `点击上方“使用本模板格式化文档”，进入工具页（已选中「${pageTitle}」模板）。`,
-          '上传需要按本指南排版的 .docx 文档，发起格式化任务。',
-          '下载排版后的文档，并对照下方原文检查关键格式（必要时手动微调）。',
+          '上传你的 .docx：可先点击“检查格式”获取评分与问题列表，再执行格式化。',
+          '下载结果，并结合下方正文与自查要点核对关键格式。',
         ]
       : [
-          `Click “Format using this template” to open the tool with the “${pageTitle}” template pre‑selected.`,
-          'Upload the .docx document that should follow this guide and start a formatting job.',
-          'Download the formatted document and cross‑check key details against the original guideline below.',
+          'Click “Format using this template” to open the tool with this template pre-selected.',
+          'Upload your .docx: you can run “Check formatting” first to get a score and issues, then format.',
+          'Download the result and verify key rules using the sections and self-check notes below.',
         ];
 
     return {
-      overviewTitle: isZh ? '概览' : 'Overview',
+      overviewTitle: isZh ? '速览' : 'At a glance',
       overviewParagraphs,
-      howTitle: isZh ? '如何使用 FreeFormat 应用本指南' : 'How to use FreeFormat with this guide',
+      howTitle: isZh ? '如何格式化 / 如何检查格式' : 'How to format / how to check formatting',
       howSteps,
-      sourceLabel: base.sourceLabel,
+      sourceLabel,
     };
   })();
 
@@ -351,42 +390,24 @@ export default async function Page({ params }: { params: { locale: string; slug:
     guide.slug,
   )}?intent=need-template&pos=hero`;
 
-  const templateTierRaw =
-    guide.meta?.template_tier ||
-    guide.meta?.template_status ||
-    guide.meta?.template_quality ||
-    null;
-  const templateTier = (templateTierRaw || 'bronze').toLowerCase();
-  const templateTierLabel =
-    templateTier === 'gold'
-      ? (isZh ? '★ Gold 模板（推荐）' : '★ Gold template (recommended)')
-      : templateTier === 'silver'
-      ? (isZh ? '◇ Silver 模板（可用）' : '◇ Silver template (good)')
-      : isZh
-      ? '• Bronze 模板'
-      : '• Bronze template';
-  const templateTierClass =
-    templateTier === 'gold'
-      ? 'bg-amber-500/10 text-amber-800 border border-amber-300'
-      : templateTier === 'silver'
-      ? 'bg-slate-500/10 text-slate-800 border border-slate-300'
-      : 'bg-orange-500/10 text-orange-800 border border-orange-300';
-
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{title}</h1>
-      <p className="mt-2 text-slate-600">{sub}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {entity ? <Badge>{entity}</Badge> : null}
-        {degreeText ? <Badge>{degreeText}</Badge> : null}
-        {guide.guide_type ? <Badge>{guide.guide_type}</Badge> : null}
-        {hasTemplate ? (
-          <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${templateTierClass}`}
-          >
-            {templateTierLabel}
-          </span>
-        ) : null}
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <span>{metaLine || (isZh ? '格式指南' : 'Formatting guide')}</span>
+          {hasTemplate ? (
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${templateTierClass}`}
+            >
+              {templateTierLabel}
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {showEntityBadge ? <Badge>{entity}</Badge> : null}
+          {degreeText ? <Badge>{degreeText}</Badge> : null}
+        </div>
       </div>
 
       {/* Actions (use template) + Source card */}
@@ -408,6 +429,14 @@ export default async function Page({ params }: { params: { locale: string; slug:
               {isZh ? '前往工具页' : 'Go to tool'}
             </a>
           )}
+          {hasTemplate ? (
+            <a
+              href={checkHref}
+              className="inline-flex items-center rounded-md border border-cyan-700 px-3 py-2 text-sm font-medium text-cyan-800 hover:bg-cyan-50"
+            >
+              {isZh ? '检查格式' : 'Check formatting'}
+            </a>
+          ) : null}
           {isIntentOnly ? (
             <a
               href={intentHref}
@@ -423,14 +452,6 @@ export default async function Page({ params }: { params: { locale: string; slug:
           )}
         </div>
       </div>
-
-      {hasTemplate && guide.template_id ? (
-        <GuideCheckModule
-          locale={params.locale}
-          templateId={guide.template_id}
-          guideTitle={guide.title || guide.slug}
-        />
-      ) : null}
 
       {/* Summary & how-to section (from backend summary.card) */}
       {effectiveSummaryCard ? (
@@ -471,6 +492,16 @@ export default async function Page({ params }: { params: { locale: string; slug:
               ) : null}
             </div>
           </div>
+        </section>
+      ) : null}
+
+      {/* Value modules + check (single column; check first) */}
+      {hasTemplate || hasValueModules ? (
+        <section className="mt-8 mx-auto max-w-5xl space-y-6">
+          {hasTemplate && guide.template_id ? (
+            <GuideCheckModule locale={params.locale} templateId={guide.template_id} guideTitle={guide.title || guide.slug} />
+          ) : null}
+          {hasValueModules ? <ValueModules locale={params.locale} modules={valueModules} /> : null}
         </section>
       ) : null}
 
