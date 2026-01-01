@@ -308,12 +308,11 @@ export default async function Page({ params }: { params: { locale: string; slug:
     (!!metaSourceTitle ? entity.toLowerCase() !== metaSourceTitle.toLowerCase() : true);
   const guideMode = guide.meta?.guide_mode || 'full';
   const isIntentOnly = guide.isIntentOnly ?? guideMode === 'intent_only';
-  const raw = guide.rawtext || '';
-  const hasMd = (guide.rawtext_format || 'md') === 'md';
   const blocks = Array.isArray((guide.sections as any)?.blocks)
     ? ((guide.sections as any).blocks as { id?: string; title?: string; md?: string }[])
     : [];
   const hasBlocks = blocks.length > 0;
+  const hasMainContent = hasBlocks;
   const tocMd = hasBlocks
     ? blocks
         .map((b) => {
@@ -322,8 +321,6 @@ export default async function Page({ params }: { params: { locale: string; slug:
         })
         .filter(Boolean)
         .join('\n\n\n')
-    : hasMd
-    ? raw
     : '';
   const toolHref = hasTemplate
     ? `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
@@ -505,51 +502,36 @@ export default async function Page({ params }: { params: { locale: string; slug:
         </section>
       ) : null}
 
-      {/* Main content: prefer structured sections.blocks when available; fall back to raw full text */}
-      <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_minmax(0,840px)_280px]">
-        {/* Left spacer for wider center column on large screens */}
-        <div className="hidden lg:block" />
-        <div>
-          <div className="rounded-lg border p-4">
-            {hasBlocks ? (
+      {/* Main content: optional (we may omit long-form guideline text for landing-page quality) */}
+      {hasMainContent ? (
+        <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_minmax(0,840px)_280px]">
+          {/* Left spacer for wider center column on large screens */}
+          <div className="hidden lg:block" />
+          <div>
+            <div className="rounded-lg border p-4">
               <article className="space-y-8">
                 {blocks.map((b, idx) => (
                   <section key={`${b.id || 'block'}-${idx}`}>
                     {b.title ? (
-                      <h2 id={slugifyHeadingId(b.title)} className="mb-3 scroll-mt-24 text-2xl font-semibold text-slate-900">
+                      <h2
+                        id={slugifyHeadingId(b.title)}
+                        className="mb-3 scroll-mt-24 text-2xl font-semibold text-slate-900"
+                      >
                         {b.title}
                       </h2>
                     ) : null}
-                    {b.md ? (
-                      <Markdown md={b.md} />
-                    ) : null}
+                    {b.md ? <Markdown md={b.md} /> : null}
                   </section>
                 ))}
               </article>
-            ) : hasMd ? (
-              <>
-                <h2 className="mb-3 text-2xl font-semibold text-slate-900">
-                  {isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}
-                </h2>
-                <Markdown md={raw} />
-              </>
-            ) : (
-              <>
-                <h2 className="mb-3 text-2xl font-semibold text-slate-900">
-                  {isZh ? '原文全文（已清洗）' : 'Original Guideline (cleaned)'}
-                </h2>
-                <pre className="whitespace-pre-wrap text-slate-800">{raw}</pre>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-        {/* Right sticky, collapsible TOC */}
-        <div className="hidden lg:block">
-          {tocMd ? (
-            <TocSidebar md={tocMd} title={isZh ? '目录' : 'Contents'} label={isZh ? '目录' : 'Contents'} />
-          ) : null}
-        </div>
-      </section>
+          {/* Right sticky, collapsible TOC */}
+          <div className="hidden lg:block">
+            {tocMd ? <TocSidebar md={tocMd} title={isZh ? '目录' : 'Contents'} label={isZh ? '目录' : 'Contents'} /> : null}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }
