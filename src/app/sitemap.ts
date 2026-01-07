@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { siteConfig } from '@/lib/siteConfig';
 
 type GuideItem = { slug: string; locale: string };
@@ -9,6 +10,9 @@ const SITEMAP_EXCLUDE_BY_LOCALE: Record<string, Set<string>> = {
 };
 
 async function fetchGuides(locale: string): Promise<GuideItem[]> {
+  // Avoid network fetch during `next build` (build sandbox / no backend running).
+  // In that case we fall back to a minimal sitemap containing only static pages.
+  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) return [];
   const api = (process.env.NEXT_PUBLIC_API_BASE || process.env.API_PROXY_TARGET || `${siteConfig.url.replace(/\/$/, '')}/api`).replace(/\/$/, '');
   try {
     const res = await fetch(`${api}/guides?locale=${encodeURIComponent(locale)}`, { next: { revalidate: 300 } });

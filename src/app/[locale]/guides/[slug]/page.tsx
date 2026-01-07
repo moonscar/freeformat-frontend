@@ -50,12 +50,18 @@ function resolveApiBaseAbsolute(): string {
 }
 
 async function fetchGuide(slug: string, locale: string): Promise<Guide | null> {
-  const base = resolveApiBaseAbsolute();
-  const url = `${base}/guides/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`;
-  const isProd = process.env.NODE_ENV === 'production';
-  const res = await fetch(url, isProd ? { next: { revalidate: 300 } } : { cache: 'no-store' });
-  if (!res.ok) return null;
-  return (await res.json()) as Guide;
+  try {
+    const base = resolveApiBaseAbsolute();
+    // During build there is no request host; avoid throwing/attempting a bad fetch.
+    if (!base || base.startsWith('/')) return null;
+    const url = `${base}/guides/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`;
+    const isProd = process.env.NODE_ENV === 'production';
+    const res = await fetch(url, isProd ? { next: { revalidate: 300 } } : { cache: 'no-store' });
+    if (!res.ok) return null;
+    return (await res.json()) as Guide;
+  } catch {
+    return null;
+  }
 }
 
 function extractMetaDescriptionFromMarkdown(md: string, maxLen = 160): string | undefined {
