@@ -47,7 +47,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
   const isZh = locale === 'zh';
   const dict = getT(locale as any);
   const t = dict.tool;
-  const info = dict.landing.info;
+  const info = t.info || dict.landing.info;
   const from = (searchParams?.from as string) || '';
   const guideSlug = (searchParams?.slug as string) || '';
   const templateId = (searchParams?.template_id as string) || '';
@@ -88,13 +88,34 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
       <Header locale={locale} />
       <HeroSection title={t.heroTitle} desc={t.heroDesc} />
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <section className="mb-4 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          {locale === 'zh' ? (
-            <p>当前仅支持使用已提供的模板进行格式化（暂不支持上传指南生成模板）。</p>
-          ) : (
-            <p>Currently, only existing templates are supported (we do not build templates from uploaded guidelines).</p>
-          )}
+        {/* Deliverables & evidence (above the fold) */}
+        <section className="mb-6 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="text-sm font-semibold text-slate-900">{isZh ? '格式检查报告' : 'Format check report'}</div>
+            <div className="mt-1 text-xs text-slate-600">
+              {isZh ? '评分 + 问题列表，先知道会改什么。' : 'Score + issues so you know what will change.'}
+            </div>
+            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+              <div className="font-semibold">{isZh ? '示例输出' : 'Example'}</div>
+              <div className="mt-1">
+                {isZh ? 'Score: 78 · Issues: 6' : 'Score: 78 · Issues: 6'}
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="text-sm font-semibold text-slate-900">{isZh ? '格式化后的 .docx' : 'A formatted .docx'}</div>
+            <div className="mt-1 text-xs text-slate-600">
+              {isZh ? '应用模板样式，下载后即可提交或微调。' : 'Template styles applied. Download and submit or fine‑tune.'}
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="text-sm font-semibold text-slate-900">{isZh ? '2 分钟自查清单' : '2‑minute checklist'}</div>
+            <div className="mt-1 text-xs text-slate-600">
+              {isZh ? '把“不支持”变成可控步骤。' : 'Turn “not supported” into a predictable workflow.'}
+            </div>
+          </div>
         </section>
+
         <section className="rounded-2xl border border-dashed p-6 text-slate-700">
         {isFromGuide ? (
           <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
@@ -125,6 +146,34 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
           <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
         </section>
 
+        {/* Taskified scope: what we fix vs. what you do in Word */}
+        <section id="scope" className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{isZh ? '范围与自查（先交付，再验证）' : 'Scope & self‑check (deliver + verify)'}</h2>
+          <div className="mt-4 grid gap-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-sm font-semibold text-slate-900">{isZh ? '我们会检查/修复（可自动化）' : 'We check & fix (auto)'}</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                <li>{isZh ? '行距 / 段距 / 首行缩进（含清理空格与 Tab）' : 'Spacing & indents (including removing extra spaces/tabs)'}</li>
+                <li>{isZh ? '正文与标题样式统一（多级标题；三级标题尽力而为）' : 'Consistent body & heading styles (multi‑level; level‑3 best effort)'}</li>
+                <li>{isZh ? '参考文献版式、图表题注段落样式' : 'Reference list layout and caption paragraph styles'}</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="text-sm font-semibold text-slate-900">{isZh ? '你仍需要在 Word 手动做（通常 1–2 分钟）' : 'You still do in Word (usually 1–2 minutes)'}</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                <li>{isZh ? '更新目录（TOC）与域（fields）' : 'Update TOC and fields'}</li>
+                <li>{isZh ? '复杂分节页码（正文从 1 开始、罗马/阿拉伯混用）' : 'Complex section‑based page numbering (front matter vs body)'}</li>
+                <li>{isZh ? '复杂多级编号体系的重建/纠错（如有）' : 'Rebuild/fix multi‑level numbering systems (if needed)'}</li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-slate-600">
+            {isZh
+              ? '提示：当前暂不支持“上传指南自动生成模板”，请使用已有模板或从指南页进入后再检查/格式化。'
+              : 'Note: we currently support existing templates only (no template building from uploaded guidelines yet).'}
+          </div>
+        </section>
+
         {/* Anchor nav + 说明与 FAQ，与反馈页保持一致布局 */}
         <AnchorNav
           items={[
@@ -137,15 +186,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         <InfoSections
           what={info.what}
           how={info.how}
-          use={{
-            ...info.use,
-            items: [
-              ...info.use.items,
-              isZh
-                ? '提交前检查清单：纸张与页边距 / 行距与缩进 / 标题层级 / 页码位置 / 图表题注'
-                : 'Pre‑submission checklist: paper & margins / spacing & indent / headings / page numbers / captions',
-            ],
-          }}
+          use={info.use}
           subheads={info.subheads}
         />
 
