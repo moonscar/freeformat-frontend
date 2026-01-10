@@ -19,6 +19,30 @@ type GuideSearchItem = {
   status: string;
 };
 
+type CheckItem = {
+  code: string;
+  title: string;
+  strength: "strong" | "medium" | "weak";
+  status: "pass" | "warn" | "fail" | "unknown";
+  confidence: number;
+  weight: number;
+  recommendation?: string | null;
+};
+
+type CheckReport = {
+  summary: { score: number; confidence: number; counts?: Record<string, number> };
+  items: CheckItem[];
+};
+
+type CheckResponse = {
+  created_at: string;
+  report: CheckReport;
+  report_key: string;
+  report_url?: string | null;
+  docjson_key: string;
+  docjson_url?: string | null;
+};
+
 export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
   const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
@@ -29,6 +53,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
   const [formatting, setFormatting] = React.useState(false);
   const [jobId, setJobId] = React.useState<string>("");
   const [jobStatus, setJobStatus] = React.useState<JobStatus | null>(null);
+  const [checking, setChecking] = React.useState(false);
+  const [checkResult, setCheckResult] = React.useState<CheckResponse | null>(null);
   const [error, setError] = React.useState<string>("");
   const [previewError, setPreviewError] = React.useState<string>("");
   const previewRef = React.useRef<HTMLDivElement | null>(null);
@@ -36,34 +62,48 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
-      selectTemplate: "关联信息",
+      selectTemplate: "模板",
       usingTemplate: "",
       change: "",
       noTemplate: "请先选择一个指南或模板后再开始格式化",
       uploadDoc: "上传 .docx",
+      runCheck: "开始检查",
       start: "开始格式化",
       uploading: "正在上传…",
       formatting: "正在格式化…",
+      checking: "正在检查…",
       job: "任务",
       error: "错误",
       result: "结果",
       downloadDoc: "下载格式化文档",
       downloadMap: "下载格式映射",
+      youWillGet: "你将获得：评分（score）、问题列表（issues）与格式化后的 .docx。",
+      sampleReport: "检查输出预览",
+      score: "评分",
+      confidence: "置信度",
+      keyIssues: "关键问题",
     };
     const en: Record<string, string> = {
-      selectTemplate: "Context",
+      selectTemplate: "Template",
       usingTemplate: "",
       change: "",
       noTemplate: "Please select a guide/template before formatting.",
       uploadDoc: "Upload .docx",
+      runCheck: "Run check",
       start: "Start Formatting",
       uploading: "Uploading…",
       formatting: "Formatting…",
+      checking: "Checking…",
       job: "Job",
       error: "Error",
       result: "Result",
       downloadDoc: "Download formatted doc",
       downloadMap: "",
+      youWillGet: "You’ll receive: a score, an issue list, and a formatted .docx.",
+      sampleReport: "Sample check output",
+      score: "Score",
+      confidence: "Confidence",
+      keyIssues: "Key issues",
     };
     return (locale === "zh" ? zh : en)[s] || s;
   };
@@ -88,6 +128,26 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     // 默认尝试拉取一批推荐模板（无查询词），方便直接使用
     void handleSearch();
   }, []);
+
+  // Default selection: reduce the “pick a template first” friction by preselecting a recommended template.
+  React.useEffect(() => {
+    if (templateId) return;
+    if (guideSlug) return; // from guide: respect incoming state
+    if (!searchResults.length) return;
+
+    const preferredSlug = locale === "zh" ? "ustc-edu" : "apa-org";
+    const preferred = searchResults.find((x) => x.slug === preferredSlug);
+    if (preferred) {
+      handleSelectGuide(preferred);
+      return;
+    }
+    const gold = searchResults.find((x) => (x.templateTier || "").toLowerCase() === "gold");
+    if (gold) {
+      handleSelectGuide(gold);
+      return;
+    }
+    handleSelectGuide(searchResults[0]);
+  }, [searchResults, templateId, guideSlug, locale]);
 
   React.useEffect(() => {
     // 若从指南页跳转且尚未有标题，尝试获取指南详情以展示名称
@@ -266,6 +326,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
 
   async function handleStart() {
     setError("");
+    setCheckResult(null);
     if (!templateId) {
       setError(t("noTemplate"));
       return;
@@ -313,15 +374,167 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     }
   }
 
+  async function handleRunCheck() {
+    setError("");
+    setCheckResult(null);
+    if (!templateId) {
+      setError(t("noTemplate"));
+      return;
+    }
+    if (!file) {
+      setError(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
+      return;
+    }
+    const now = Date.now();
+    const reqKey = `${file.name}|${file.size}|${templateId}|check`;
+    if (lastRequestKey === reqKey && cooldownUntil > now) {
+      setError(locale === "zh" ? "请勿短时间内重复提交同一文件" : "Please avoid resubmitting the same file too quickly.");
+      return;
+    }
+    setLastRequestKey(reqKey);
+    const nextCooldown = now + 3000;
+    setCooldownUntil(nextCooldown);
+    setTimeout(() => setCooldownUntil(0), 3000);
+    try {
+      const up = await handleUpload();
+      setChecking(true);
+      const body: any = {
+        file_id: up.file_id,
+        template_id: templateId,
+        force_regen_docjson: false,
+      };
+      const effectiveSlug = currentGuideSlug || guideSlug || "";
+      if (effectiveSlug) body.guide_slug = effectiveSlug;
+      if (isDev) console.debug('[tool] check -> POST', `${API_BASE}/check`, body);
+      const res = await fetch(`${API_BASE}/check`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        let msg = `check failed: ${res.status}`;
+        try {
+          const j = await res.json();
+          if (j?.detail) msg += ` - ${j.detail}`;
+        } catch {}
+        throw new Error(msg);
+      }
+      const data = (await res.json()) as CheckResponse;
+      setCheckResult(data);
+      if (isDev) console.debug('[tool] check <- OK', data);
+    } catch (e: any) {
+      setError(String(e?.message || e));
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  const checkSummary = checkResult?.report?.summary;
+  const checkItems = Array.isArray(checkResult?.report?.items) ? (checkResult?.report?.items as CheckItem[]) : [];
+  const actionable = checkItems.filter((it) => it.status === "fail" || it.status === "warn");
+  const topIssues = actionable.slice(0, 8);
+
   return (
     <div className="space-y-6">
+      {/* Main interaction: upload + check/format (check is primary) */}
+      <section className="rounded-lg border p-4">
+        <div className="text-sm font-medium text-slate-900">
+          {locale === "zh" ? "上传 → 检查 → 格式化" : "Upload → Check → Format"}
+        </div>
+        <div className="mt-1 text-xs text-slate-700">{t("youWillGet")}</div>
+        <div className="mt-3 flex items-center gap-3">
+          <input type="file" accept=".docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          {file ? <span className="text-xs text-slate-600">{file.name}</span> : null}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRunCheck}
+            disabled={!templateId || uploading || checking || searching || (cooldownUntil > Date.now())}
+            className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${uploading || checking ? 'bg-slate-400' : 'bg-cyan-700 hover:bg-cyan-800'}`}
+          >
+            {uploading ? t("uploading") : searching && !templateId ? (locale === "zh" ? "加载模板中…" : "Loading templates…") : checking ? t("checking") : t("runCheck")}
+          </button>
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={!templateId || uploading || formatting || searching || (cooldownUntil > Date.now())}
+            className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${uploading || formatting ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
+          >
+            {uploading ? t("uploading") : searching && !templateId ? (locale === "zh" ? "加载模板中…" : "Loading templates…") : formatting ? t("formatting") : t("start")}
+          </button>
+          {jobId ? <span className="text-xs text-slate-600">{t("job")}: {jobId}</span> : null}
+        </div>
+      </section>
+
+      {/* Check output (evidence) */}
+      <section className="rounded-lg border p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-medium text-slate-900">
+            {locale === "zh" ? "检查输出（评分 + 问题列表）" : "Check output (score + issues)"}
+          </div>
+          <span className="text-xs text-slate-500">{t("sampleReport")}</span>
+        </div>
+        {checkSummary ? (
+          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <div className="flex flex-wrap items-end gap-6">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("score")}</div>
+                <div className="text-3xl font-semibold text-slate-900">{Math.round(checkSummary.score)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("confidence")}</div>
+                <div className="text-lg font-semibold text-slate-900">{Math.round(checkSummary.confidence * 100)}%</div>
+              </div>
+            </div>
+            {topIssues.length ? (
+              <div className="mt-4">
+                <div className="text-sm font-semibold text-slate-900">{t("keyIssues")}</div>
+                <ul className="mt-2 space-y-2">
+                  {topIssues.map((it) => (
+                    <li key={it.code} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium text-slate-900">{it.title}</div>
+                          {it.recommendation ? (
+                            <div className="mt-1 text-xs text-slate-600">{it.recommendation}</div>
+                          ) : null}
+                        </div>
+                        <span
+                          className={
+                            it.status === "fail"
+                              ? "shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700"
+                              : "shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800"
+                          }
+                        >
+                          {it.status === "fail" ? (locale === "zh" ? "失败" : "Fail") : (locale === "zh" ? "警告" : "Warn")}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="mt-4 text-sm text-slate-700">{locale === "zh" ? "暂无可操作问题。" : "No actionable issues."}</div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-3 text-sm text-slate-700">
+            {locale === "zh"
+              ? "点击上方“开始检查”后，会生成评分（score）与问题列表（issues），用于你判断本次格式化会带来哪些改变。"
+              : "Click “Run check” above to generate a score and an issue list so you know what will change before formatting."}
+          </div>
+        )}
+      </section>
+
       {/* Template / guide selection */}
       <section className="rounded-lg border p-4">
         <div className="text-sm font-medium text-slate-900">{t("selectTemplate")}</div>
         <div className="mt-1 text-xs text-slate-700">
           {templateId ? (
             <>
-              {locale === 'zh' ? '已选择指南：' : 'Selected guide:'}{' '}
+              {locale === 'zh' ? '当前模板（可切换）：' : 'Current template (switchable):'}{' '}
               <span className="font-mono">
                 {currentGuideTitle || currentGuideSlug || guideSlug || (locale === 'zh' ? '（未命名指南）' : '(unnamed guide)')}
               </span>
@@ -402,34 +615,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
             })}
           </div>
         ) : null}
-        <div className="mt-3 text-xs text-slate-500">
-          {locale === 'zh'
-            ? '当前仅支持使用已提供的模板进行格式化。'
-            : 'Currently, only existing templates are supported.'}
-        </div>
       </section>
-
-      {/* Upload */}
-      <section className="rounded-lg border p-4">
-        <div className="text-sm font-medium text-slate-900">{t("uploadDoc")}</div>
-        <div className="mt-2 flex items-center gap-3">
-          <input type="file" accept=".docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          {file ? <span className="text-xs text-slate-600">{file.name}</span> : null}
-        </div>
-      </section>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleStart}
-          disabled={uploading || formatting || (cooldownUntil > Date.now())}
-          className={`rounded-md px-4 py-2 text-sm text-white ${uploading || formatting ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
-        >
-          {uploading ? t("uploading") : formatting ? t("formatting") : t("start")}
-        </button>
-        {jobId ? <span className="text-xs text-slate-600">{t("job")}: {jobId}</span> : null}
-      </div>
 
       {/* Status */}
       {error ? (
