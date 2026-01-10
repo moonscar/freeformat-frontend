@@ -75,11 +75,57 @@ const pages = {
       },
     },
     tool: {
-      heroTitle: '论文 Word 格式化工具',
-      heroDesc: '支持毕业论文与期刊论文：选择已有模板，上传 Word（.docx）一键应用字体字号、行距、页边距与标题层级。',
+      heroTitle: '论文 Word 排版工具（.docx 格式化）',
+      heroDesc:
+        '上传 Word（.docx）→ 先做格式检查（评分 + 问题列表）→ 一键应用模板并下载排版后的论文/学术文档。',
       placeholderTitle: '工具区',
       placeholderDesc: '选择模板并上传 .docx 开始格式化。',
       links: { templates: '模板列表', privacy: '隐私与使用限制' },
+      info: {
+        subheads: { overview: '概览', steps: '步骤', cases: '适用范围' },
+        what: {
+          title: '你会得到什么？',
+          paragraphs: [
+            '你会拿到两份交付物：一份格式检查报告（score + issues），以及一份应用模板后的 .docx 格式化文档。',
+            '检查报告用于你在“格式化之前”确认会改哪些地方；格式化文档用于直接提交或在 Word 里做 1–2 分钟的最终检查。',
+          ],
+        },
+        how: {
+          title: '如何使用？',
+          steps: [
+            '上传你的 Word（.docx）论文或学术文档',
+            '点击“开始检查”，先查看评分与问题列表（知道会改什么）',
+            '确认后点击“开始格式化”，下载排版后的 .docx',
+            '在 Word 中更新目录/域（如需要），并按清单做最后自查',
+          ],
+        },
+        use: {
+          title: '可以解决哪些排版问题？',
+          items: [
+            '行距 / 段距 / 首行缩进（含清理多余空格与 Tab）',
+            '正文与标题样式统一（多级标题；三级标题尽力而为）',
+            '参考文献“版式”（悬挂缩进、行距等）与图表题注段落样式',
+          ],
+        },
+        faq: {
+          title: '常见问题',
+          items: [
+            {
+              q: '我怎么判断格式化有没有用？',
+              a: '先运行“格式检查”获取评分与问题列表，再格式化并下载 .docx。你可以对照问题列表逐项核对关键格式是否已改善。',
+            },
+            {
+              q: '哪些内容需要我在 Word 里手动做？',
+              a: '目录（TOC）/域更新、复杂分节页码、复杂多级编号体系的重建通常需要在 Word 中手动处理。建议先用本工具统一标题样式，再在 Word 里更新目录。',
+            },
+            { q: '会修改正文内容吗？', a: '不会。系统仅调整样式与排版，不会更改正文语义。' },
+            {
+              q: '当前不支持或不保证哪些内容？',
+              a: '复杂页眉页脚与分节页码、目录字段本体修复、多级编号体系重建、Word 原生公式（OMML）精细排版、表格内部所有细节样式、中英混排字符级分字体、参考文献条目“内容规范”。',
+            },
+          ],
+        },
+      },
     },
   },
   en: {
@@ -155,11 +201,57 @@ const pages = {
       },
     },
     tool: {
-      heroTitle: 'Thesis & Word Formatting Tool',
-      heroDesc: 'Format theses and academic papers in Word (.docx): pick an existing template and apply fonts, spacing, margins and headings automatically.',
+      heroTitle: 'Word Thesis Formatting Tool (.docx)',
+      heroDesc:
+        'Upload a Word (.docx) thesis/paper → run a format check (score + issues) → apply a template and download a formatted document.',
       placeholderTitle: 'Tool area',
       placeholderDesc: 'Pick a template and upload a .docx to start formatting.',
       links: { templates: 'Templates', privacy: 'Privacy' },
+      info: {
+        subheads: { overview: 'Overview', steps: 'Steps', cases: 'Scope' },
+        what: {
+          title: 'What you’ll get',
+          paragraphs: [
+            'Two deliverables: a format‑check report (score + issue list), and a formatted .docx with template styles applied.',
+            'Run the check first to see what will change. Then format and do a quick final review in Word if needed.',
+          ],
+        },
+        how: {
+          title: 'How to use',
+          steps: [
+            'Upload your Word (.docx) thesis or academic paper',
+            'Click “Run check” to get a score and an issue list (know what will change)',
+            'Click “Start formatting” and download the formatted .docx',
+            'If needed, update TOC/fields in Word and do a final checklist review',
+          ],
+        },
+        use: {
+          title: 'What it can fix (layout)',
+          items: [
+            'Spacing and indents (including removing extra spaces/tabs)',
+            'Consistent body & heading styles (multi‑level headings; level‑3 best effort)',
+            'Reference list layout and caption paragraph styles for tables/figures',
+          ],
+        },
+        faq: {
+          title: 'FAQ',
+          items: [
+            {
+              q: 'How do I verify the result?',
+              a: 'Run “Format Check” first to get a score and an issue list. Then format and validate key items against the report.',
+            },
+            {
+              q: 'What do I still need to do in Word?',
+              a: 'Updating TOC/fields, complex section‑based page numbering, and rebuilding multi‑level numbering systems are usually manual steps. A common workflow: apply heading styles first, then update the TOC in Word.',
+            },
+            { q: 'Do you change my content?', a: 'No. We only apply styles and layout, not the text itself.' },
+            {
+              q: 'What is not supported or not guaranteed yet?',
+              a: 'Complex headers/footers and section‑based page numbering, fixing/updating TOC fields, rebuilding multi‑level numbering systems, fine‑grained Word equation objects (OMML), all table‑internal styling details, character‑level mixed‑language font rules, and citation/reference content rules.',
+            },
+          ],
+        },
+      },
     },
   },
 } as const;
