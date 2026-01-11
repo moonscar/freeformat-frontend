@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { siteConfig } from '@/lib/siteConfig';
 
-type GuideItem = { slug: string; locale: string };
+type GuideItem = { slug: string; locale: string; guide_type?: string | null };
 
 const SITEMAP_EXCLUDE_BY_LOCALE: Record<string, Set<string>> = {
   en: new Set(["proquest", "ucl-edu", "apa-format"]),
@@ -15,7 +15,7 @@ async function fetchGuides(locale: string): Promise<GuideItem[]> {
   if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) return [];
   const api = (process.env.NEXT_PUBLIC_API_BASE || process.env.API_PROXY_TARGET || `${siteConfig.url.replace(/\/$/, '')}/api`).replace(/\/$/, '');
   try {
-    const res = await fetch(`${api}/guides?locale=${encodeURIComponent(locale)}`, { next: { revalidate: 300 } });
+    const res = await fetch(`${api}/guides?locale=${encodeURIComponent(locale)}&limit=500`, { next: { revalidate: 300 } });
     if (!res.ok) return [];
     const items = (await res.json()) as GuideItem[];
     const exclude = SITEMAP_EXCLUDE_BY_LOCALE[locale] || new Set<string>();
@@ -29,18 +29,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url.replace(/\/$/, '');
   const locales = ['zh', 'en'];
 
-  const staticRoutes = ['', '/tool', '/guides', '/feedback', '/privacy', '/about', '/devlog', '/support', '/landing'];
+  const staticRoutes = ['', '/tool', '/guides', '/topics', '/feedback', '/privacy', '/about', '/devlog', '/support', '/landing'];
 
   const guideEntries: MetadataRoute.Sitemap = [];
+  const topicEntries: MetadataRoute.Sitemap = [];
   for (const locale of locales) {
     const items = await fetchGuides(locale);
     for (const g of items) {
-      guideEntries.push({
-        url: `${baseUrl}/${locale}/guides/${g.slug}`,
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-        lastModified: new Date(),
-      });
+      const t = String(g.guide_type || '').toLowerCase();
+      if (t === 'topic') {
+        topicEntries.push({
+          url: `${baseUrl}/${locale}/topics/${g.slug}`,
+          changeFrequency: 'weekly' as const,
+          priority: 0.7,
+          lastModified: new Date(),
+        });
+      } else {
+        guideEntries.push({
+          url: `${baseUrl}/${locale}/guides/${g.slug}`,
+          changeFrequency: 'weekly' as const,
+          priority: 0.8,
+          lastModified: new Date(),
+        });
+      }
     }
   }
 
@@ -65,5 +76,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const entries: MetadataRoute.Sitemap = [...staticEntries, ...guideEntries];
-  return entries;
+  return [...entries, ...topicEntries];
 }

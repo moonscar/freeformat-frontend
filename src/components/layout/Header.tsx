@@ -15,6 +15,9 @@ export default function Header({ locale }: { locale: string }) {
           <Link prefetch={false} href={`/${locale}/guides`} className="hover:text-slate-900">
             Guides
           </Link>
+          <Link prefetch={false} href={`/${locale}/topics`} className="hover:text-slate-900">
+            {isZh ? '专题' : 'Topics'}
+          </Link>
         </nav>
       </div>
     </header>
