@@ -9,7 +9,7 @@ import FAQ from '@/components/sections/FAQ';
 import GuideList from '@/components/GuideList';
 import type { Metadata } from 'next';
 
-const REQUEST_EMAIL = process.env.NEXT_PUBLIC_REQUEST_EMAIL || 'hello@ai-formatter.com';
+const REQUEST_EMAIL = process.env.NEXT_PUBLIC_REQUEST_EMAIL || 'about@freeformat.app';
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const localeKey = params.locale === 'en' ? 'en' : 'zh';
@@ -75,4 +75,3 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
 }
 
 export const revalidate = 300;
-

@@ -11,7 +11,7 @@ type EmailCopy = {
 };
 
 export default function EmailCTA({ t }: { t: EmailCopy }) {
-  const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@your-domain.com';
+  const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'about@freeformat.app';
 
   const { subject, body } = useMemo(() => {
     const s = encodeURIComponent('论文格式化需求 / Thesis Formatting Request');
@@ -57,4 +57,3 @@ export default function EmailCTA({ t }: { t: EmailCopy }) {
     </div>
   );
 }
-

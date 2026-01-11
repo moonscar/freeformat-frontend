@@ -3,7 +3,7 @@ const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeformat.app';
 export const siteConfig = {
   url: defaultUrl,
   twitterHandle: '@aiformatter',
-  contactEmail: 'hello@ai-formatter.com',
+  contactEmail: 'about@freeformat.app',
   locales: {
     zh: {
       title: 'FreeFormat – AI 文档排版工具（论文与学术文档）',

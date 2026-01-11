@@ -53,8 +53,8 @@ export default function PrivacyPage({ params }: { params: { locale: string } }) 
             <h2 className="text-lg font-semibold">{isZh ? '联系方式' : 'Contact'}</h2>
             <p className="mt-2">
               {isZh
-                ? '如有隐私或合规问题，请邮件联系：hello@freeformat.app'
-                : 'If you have privacy or compliance questions, email: hello@freeformat.app'}
+                ? '如有隐私或合规问题，请邮件联系：about@freeformat.app'
+                : 'If you have privacy or compliance questions, email: about@freeformat.app'}
             </p>
           </section>
         </div>
