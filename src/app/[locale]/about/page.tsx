@@ -72,34 +72,6 @@ export default function AboutPage({ params }: { params: { locale: string } }) {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">{isZh ? '如何工作（3 步）' : 'How it works (3 steps)'}</h2>
-            <ol className="mt-2 list-decimal space-y-1 pl-5">
-              <li>{isZh ? '选择一个指南/模板（如 APA、MLA 或学校论文模板）。' : 'Pick a guide/template (e.g., APA, MLA, or a school thesis template).'}</li>
-              <li>{isZh ? '上传你的 Word（.docx）并先做一次格式检查（评分 + 问题列表）。' : 'Upload your Word (.docx) and run a format check (score + issues).'}</li>
-              <li>{isZh ? '下载排版后的文档，并按学校/期刊要求做最终检查。' : 'Download the formatted document and cross‑check against official requirements.'}</li>
-            </ol>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold">{isZh ? '我们能做什么（当前版本）' : 'What it can do (current)'}</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>{isZh ? '统一行距、段前段后、首行缩进（并清理多余空格/Tab）。' : 'Unify spacing and indents (and remove extra spaces/tabs).'}</li>
-              <li>{isZh ? '统一正文与多级标题样式。' : 'Apply consistent body and multi‑level heading styles.'}</li>
-              <li>{isZh ? '统一参考文献列表的版式（如悬挂缩进）。' : 'Format reference list layout (e.g., hanging indents).'}</li>
-              <li>{isZh ? '统一表题/图题等题注样式。' : 'Format table/figure caption styles.'}</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold">{isZh ? '能力边界（我不会硬说“一键全搞定”）' : 'Boundaries (what I won’t over-promise)'}</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>{isZh ? '不改写或润色正文内容。' : 'We do not rewrite or proofread your content.'}</li>
-              <li>{isZh ? '不保证复杂页眉页脚与分节页码完全一致。' : 'We do not guarantee complex headers/footers and section‑based page numbering.'}</li>
-              <li>{isZh ? '不负责参考文献条目的内容规范（字段顺序/标点等）。' : 'We do not enforce citation/reference content rules (field order/punctuation).'}</li>
-            </ul>
-          </section>
-
-          <section>
             <h2 className="text-lg font-semibold">{isZh ? '盈利模式与未来愿景' : 'Business model & vision'}</h2>
             <p className="mt-2">
               {isZh
