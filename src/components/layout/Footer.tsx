@@ -11,17 +11,14 @@ export default function Footer({ locale }: { locale: string }) {
             <Link href={`/${locale}/about`} className="hover:text-slate-900">
               {isZh ? '关于' : 'About'}
             </Link>
+            <Link href={`/${locale}/devlog`} className="hover:text-slate-900">
+              {isZh ? '开发日志' : 'Dev log'}
+            </Link>
             <Link href={`/${locale}/support`} className="hover:text-slate-900">
               {isZh ? '支持' : 'Support'}
             </Link>
-            <Link href={`/${locale}/contact`} className="hover:text-slate-900">
-              {isZh ? '联系' : 'Contact'}
-            </Link>
             <Link href={`/${locale}/privacy`} className="hover:text-slate-900">
               {isZh ? '隐私' : 'Privacy'}
-            </Link>
-            <Link href={`/${locale}/terms`} className="hover:text-slate-900">
-              {isZh ? '条款' : 'Terms'}
             </Link>
           </div>
         </div>
