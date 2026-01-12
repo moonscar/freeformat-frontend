@@ -92,6 +92,41 @@ export default function PrivacyPage({ params }: { params: { locale: string } }) 
             </ul>
           </section>
           <section>
+            <h2 className="text-lg font-semibold">Ads & Cookies</h2>
+            <p className="mt-2">
+              {isZh
+                ? '我们的网站可能展示第三方广告。第三方供应商（包括 Google）可能使用 Cookie 或类似技术来投放广告、衡量广告效果，并在符合适用法律的情况下提供个性化广告。'
+                : 'Our site may display third‑party ads. Third‑party vendors (including Google) may use cookies or similar technologies to serve ads, measure ad performance, and (where permitted by law) provide personalized ads.'}
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>
+                <a
+                  className="text-cyan-700 underline hover:text-cyan-900"
+                  href="https://optout.aboutads.info/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {isZh ? '通过 AboutAds 选择退出部分基于兴趣的广告（Opt‑out）' : 'Opt out of some interest‑based ads via AboutAds'}
+                </a>
+              </li>
+              <li>
+                <a
+                  className="text-cyan-700 underline hover:text-cyan-900"
+                  href="https://adssettings.google.com/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {isZh ? '通过 Google 广告设置管理个性化广告偏好' : 'Manage personalization in Google Ads Settings'}
+                </a>
+              </li>
+            </ul>
+            <p className="mt-2 text-sm text-slate-600">
+              {isZh
+                ? '如果未来面向 EEA/UK/CH 等地区提供服务，可能需要使用 Google 认可的 CMP 来进行广告同意管理，否则可能无法投放个性化广告。'
+                : 'If we serve users in EEA/UK/CH in the future, we may need a Google‑certified CMP for consent management; otherwise personalized ads may not be available.'}
+            </p>
+          </section>
+          <section>
             <h2 className="text-lg font-semibold">{isZh ? '你可以怎么做（删除与反馈）' : 'Deletion & feedback'}</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>{isZh ? '如需删除某次任务相关的文件/中间数据，请发邮件到：about@freeformat.app' : 'To delete a task’s files/artifacts, email: about@freeformat.app'}</li>
