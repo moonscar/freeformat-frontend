@@ -4,6 +4,11 @@ import React from "react";
 
 type Props = {
   locale: "en" | "zh";
+  initialGuideSlug?: string;
+  initialTemplateId?: string;
+  initialUpload?: UploadResult | null;
+  initialFormattedUrl?: string;
+  initialDocJsonUrl?: string;
 };
 
 type UploadResult = { file_id: string; filename: string; url: string };
@@ -93,16 +98,24 @@ function toNum(s: string): number | undefined {
   return undefined;
 }
 
-export default function StudioWorkArea({ locale }: Props) {
+export default function StudioWorkArea({
+  locale,
+  initialGuideSlug,
+  initialTemplateId,
+  initialUpload,
+  initialFormattedUrl,
+  initialDocJsonUrl,
+}: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "/api").replace(/\/$/, "");
   const isDev = process.env.NODE_ENV !== "production";
 
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [file, setFile] = React.useState<File | null>(null);
   const [uploaded, setUploaded] = React.useState<UploadResult | null>(null);
   const [uploading, setUploading] = React.useState(false);
 
-  const [templateId, setTemplateId] = React.useState<string>("");
-  const [currentGuideSlug, setCurrentGuideSlug] = React.useState<string>("");
+  const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
+  const [currentGuideSlug, setCurrentGuideSlug] = React.useState<string>(initialGuideSlug || "");
   const [currentGuideTitle, setCurrentGuideTitle] = React.useState<string>("");
 
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -169,7 +182,7 @@ export default function StudioWorkArea({ locale }: Props) {
   React.useEffect(() => {
     if (templateId) return;
     if (!searchResults.length) return;
-    const preferredSlug = locale === "zh" ? "ustc-edu" : "apa-org";
+    const preferredSlug = (initialGuideSlug || (locale === "zh" ? "ustc-edu" : "apa-org")).trim();
     const preferred = searchResults.find((x) => x.slug === preferredSlug);
     if (preferred) {
       handleSelectGuide(preferred);
@@ -181,7 +194,18 @@ export default function StudioWorkArea({ locale }: Props) {
       return;
     }
     handleSelectGuide(searchResults[0]);
-  }, [searchResults, templateId, locale]);
+  }, [searchResults, templateId, locale, initialGuideSlug]);
+
+  // When deep-linked with guide slug, align title/templateId from search results (no need to show UUID).
+  React.useEffect(() => {
+    if (!initialGuideSlug) return;
+    if (!searchResults.length) return;
+    const it = searchResults.find((x) => x.slug === initialGuideSlug);
+    if (!it) return;
+    if (!currentGuideSlug) setCurrentGuideSlug(it.slug);
+    if (!currentGuideTitle) setCurrentGuideTitle(it.title || "");
+    if (!templateId) setTemplateId(it.templateId);
+  }, [initialGuideSlug, searchResults, currentGuideSlug, currentGuideTitle, templateId]);
 
   React.useEffect(() => {
     if (!sessionKey) return;
@@ -192,6 +216,22 @@ export default function StudioWorkArea({ locale }: Props) {
       if (isDev) console.debug("[studio] save session patch failed", e);
     }
   }, [sessionKey, patchFontRules, isDev]);
+
+  // If the page was deep-linked from /tool or /guides with a known upload, hydrate state.
+  React.useEffect(() => {
+    if (uploaded) return;
+    if (!initialUpload) return;
+    setUploaded(initialUpload);
+    if (initialUpload.url) setOriginalPreviewUrl(initialUpload.url);
+    if (initialFormattedUrl) {
+      setFormattedPreviewUrl(initialFormattedUrl);
+      setPreviewMode("formatted");
+    }
+    if (initialDocJsonUrl) {
+      void fetchDocJson(initialDocJsonUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUpload, initialFormattedUrl, initialDocJsonUrl]);
 
   const activePreviewUrl = React.useMemo(() => {
     return previewMode === "formatted" ? formattedPreviewUrl : originalPreviewUrl;
@@ -251,6 +291,24 @@ export default function StudioWorkArea({ locale }: Props) {
     setFindResults([]);
     setDocJson(null);
     setError("");
+  }
+
+  function resetDocumentState() {
+    setFile(null);
+    setUploaded(null);
+    setJobId("");
+    setJobStatus(null);
+    setDocJson(null);
+    setFindQuery("");
+    setFindResults([]);
+    setCheckResult(null);
+    setAdvancedOpen(false);
+    setOriginalPreviewUrl("");
+    setFormattedPreviewUrl("");
+    setPreviewMode("original");
+    setPreviewError("");
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   React.useEffect(() => {
@@ -496,7 +554,7 @@ export default function StudioWorkArea({ locale }: Props) {
       setError(locale === "zh" ? "请先选择一个模板" : "Please select a template first.");
       return;
     }
-    if (!file) {
+    if (!file && !uploaded) {
       setError(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
       return;
     }
@@ -584,10 +642,42 @@ export default function StudioWorkArea({ locale }: Props) {
     return items.filter((x) => x.status === "fail" || x.status === "warn");
   }, [checkResult]);
 
+  const busyLabel = React.useMemo(() => {
+    if (uploading) return locale === "zh" ? "正在上传…" : "Uploading…";
+    if (checking) return locale === "zh" ? "正在检查…" : "Checking…";
+    if (formatting) return locale === "zh" ? "正在格式化…" : "Formatting…";
+    if (jobStatus?.status === "queued") return locale === "zh" ? "任务排队中…" : "Queued…";
+    if (jobStatus?.status === "running") return locale === "zh" ? "任务处理中…" : "Running…";
+    return "";
+  }, [uploading, checking, formatting, jobStatus, locale]);
+
+  const showBusy = Boolean(busyLabel);
   const hasCheckAttempted = Boolean(originalPreviewUrl);
+  const hasDocContext = Boolean(file || uploaded);
 
   return (
     <div className={`grid grid-cols-1 gap-6 ${canShowPreview ? "lg:grid-cols-12" : ""}`}>
+      {showBusy ? (
+        <div className="sticky top-0 z-20 col-span-full rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-600" />
+            <div className="min-w-0">
+              <div className="font-semibold">{busyLabel}</div>
+              <div className="mt-0.5 text-xs text-cyan-900/80">
+                {locale === "zh"
+                  ? "这是非实时页面：请保持标签页打开，完成后会自动刷新预览。"
+                  : "This is not real-time: keep this tab open and the preview will refresh when done."}
+              </div>
+            </div>
+            {jobId ? (
+              <div className="ml-auto hidden text-xs text-cyan-900/80 sm:block">
+                {locale === "zh" ? "任务：" : "Job: "} <span className="font-mono">{jobId}</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <section className={`${canShowPreview ? "lg:col-span-4" : "lg:col-span-12"} space-y-4`}>
         {/* Before upload/check: keep the UI focused on template + upload */}
         {!hasCheckAttempted ? (
@@ -653,41 +743,74 @@ export default function StudioWorkArea({ locale }: Props) {
         <div className="rounded-lg border bg-white p-4">
           <div className="text-sm font-semibold text-slate-900">{locale === "zh" ? "文件" : "Document"}</div>
           <input
+            ref={fileInputRef}
             type="file"
             accept=".docx"
             onChange={(e) => {
               const f = e.target.files?.[0] || null;
+              resetDocumentState();
               setFile(f);
-              setUploaded(null);
-              setJobId("");
-              setJobStatus(null);
-              setDocJson(null);
-              setFindQuery("");
-              setFindResults([]);
-              setCheckResult(null);
-              setAdvancedOpen(false);
-              setOriginalPreviewUrl("");
-              setFormattedPreviewUrl("");
-              setPreviewMode("original");
-              setPreviewError("");
-              setError("");
             }}
-            className="mt-2 w-full text-sm"
+            className="sr-only"
           />
+          <div className="mt-2 rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-800">
+            {file ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-xs text-slate-600">{locale === "zh" ? "已选择文件" : "Selected file"}</div>
+                  <div className="truncate font-mono">{file.name}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-md border bg-white px-3 py-1 text-xs font-semibold hover:bg-slate-50"
+                  >
+                    {locale === "zh" ? "替换" : "Replace"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetDocumentState}
+                    className="rounded-md border bg-white px-3 py-1 text-xs font-semibold hover:bg-slate-50"
+                  >
+                    {locale === "zh" ? "移除" : "Remove"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-slate-700">{locale === "zh" ? "请选择一个 .docx 文件" : "Choose a .docx file"}</div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800"
+                >
+                  {locale === "zh" ? "选择文件" : "Choose file"}
+                </button>
+              </div>
+            )}
+          </div>
           <div className="mt-2 text-xs text-slate-600">
             {uploaded ? (
               <>
-                {locale === "zh" ? "已上传：" : "Uploaded: "} <span className="font-mono">{uploaded.file_id}</span>
+                {locale === "zh" ? "已上传：" : "Uploaded: "} <span className="font-medium">{uploaded.filename || (file ? file.name : "")}</span>
               </>
             ) : (
               <>{locale === "zh" ? "上传后会自动运行检查（评分 + 不符合项）。" : "After upload, we automatically run a check (score + issues)."}</>
             )}
           </div>
+          <div className="mt-2 text-xs text-slate-500">
+            {locale === "zh" ? "隐私：文件仅用于本次检查/格式化；更多说明见 " : "Privacy: files are used only for check/format; see "}
+            <a href={`/${locale}/privacy`} className="text-cyan-700 underline hover:text-cyan-900">
+              {locale === "zh" ? "隐私政策" : "Privacy"}
+            </a>
+            {locale === "zh" ? "。" : "."}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={uploaded ? () => runCheckForFileId(uploaded.file_id).catch((e: any) => setError(String(e?.message || e))) : handleUploadAndAutoCheck}
-              disabled={uploading || checking || !templateId || !file}
+              disabled={uploading || checking || !templateId || !hasDocContext}
               className={`rounded-md px-3 py-1 text-sm text-white ${uploading || formatting ? "bg-slate-400" : "bg-slate-900 hover:bg-slate-800"}`}
             >
               {uploading
@@ -701,7 +824,7 @@ export default function StudioWorkArea({ locale }: Props) {
             <button
               type="button"
               onClick={runFormat}
-              disabled={uploading || formatting || !templateId || !file || !uploaded}
+              disabled={uploading || formatting || !templateId || !uploaded}
               className={`rounded-md px-3 py-1 text-sm text-white ${uploading || formatting ? "bg-slate-400" : "bg-slate-700 hover:bg-slate-800"} disabled:opacity-50`}
             >
               {formatting ? (locale === "zh" ? "格式化中…" : "Formatting…") : (patchDirty ? (locale === "zh" ? "重新格式化并预览" : "Reformat & preview") : (locale === "zh" ? "格式化并预览" : "Format & preview"))}
@@ -718,11 +841,7 @@ export default function StudioWorkArea({ locale }: Props) {
             ) : null}
           </div>
           {error ? <div className="mt-2 text-sm text-rose-600">{error}</div> : null}
-          {jobId ? (
-            <div className="mt-2 text-xs text-slate-600">
-              {locale === "zh" ? "任务：" : "Job: "} <span className="font-mono">{jobId}</span> {jobStatus ? `(${jobStatus.status})` : null}
-            </div>
-          ) : null}
+          {/* job details are shown in the sticky banner when running */}
         </div>
 
         {hasCheckAttempted ? (
