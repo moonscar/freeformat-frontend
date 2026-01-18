@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Markdown from '@/components/Markdown';
 import TocSidebar from '@/components/TocSidebar';
-import GuideCheckModule from '@/components/GuideCheckModule';
 import ValueModules from '@/components/ValueModules';
 import { slugifyHeadingId } from '@/lib/headingIds';
 import { permanentRedirect } from 'next/navigation';
@@ -334,7 +333,6 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const studioHref = hasTemplate
     ? `/${params.locale}/studio?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
     : `/${params.locale}/studio?from=guide&slug=${encodeURIComponent(guide.slug)}`;
-  const checkHref = '#format-check';
   const valueModules = ((guide.sections as any)?.value_modules || []) as any[];
   const hasValueModules = Array.isArray(valueModules) && valueModules.some((m) => (m?.title || m?.md));
 
@@ -421,10 +419,10 @@ export default async function Page({ params }: { params: { locale: string; slug:
         <div className="flex flex-wrap items-center gap-3">
           {hasTemplate ? (
             <a
-              href={toolHref}
+              href={studioHref}
               className="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
-              {isZh ? '使用本模板格式化文档' : 'Format using this template'}
+              {isZh ? '在工作台上传并检查/格式化' : 'Upload & check/format in Studio'}
             </a>
           ) : (
             <a
@@ -435,22 +433,6 @@ export default async function Page({ params }: { params: { locale: string; slug:
               {isZh ? '前往工具页' : 'Go to tool'}
             </a>
           )}
-          {hasTemplate ? (
-            <a
-              href={checkHref}
-              className="inline-flex items-center rounded-md border border-cyan-700 px-3 py-2 text-sm font-medium text-cyan-800 hover:bg-cyan-50"
-            >
-              {isZh ? '检查格式' : 'Check formatting'}
-            </a>
-          ) : null}
-          {hasTemplate ? (
-            <a
-              href={studioHref}
-              className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
-            >
-              {isZh ? '在工作台预览/调参' : 'Open in Studio'}
-            </a>
-          ) : null}
           {isIntentOnly ? (
             <a
               href={intentHref}
@@ -509,13 +491,10 @@ export default async function Page({ params }: { params: { locale: string; slug:
         </section>
       ) : null}
 
-      {/* Value modules + check (single column; check first) */}
-      {hasTemplate || hasValueModules ? (
+      {/* Value modules (single column) */}
+      {hasValueModules ? (
         <section className="mt-8 mx-auto max-w-5xl space-y-6">
-          {hasTemplate && guide.template_id ? (
-            <GuideCheckModule locale={params.locale} templateId={guide.template_id} guideTitle={guide.title || guide.slug} />
-          ) : null}
-          {hasValueModules ? <ValueModules locale={params.locale} modules={valueModules} /> : null}
+          <ValueModules locale={params.locale} modules={valueModules} />
         </section>
       ) : null}
 
