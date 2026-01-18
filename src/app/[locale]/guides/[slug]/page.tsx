@@ -331,6 +331,9 @@ export default async function Page({ params }: { params: { locale: string; slug:
   const toolHref = hasTemplate
     ? `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
     : `/${params.locale}/tool?from=guide&slug=${encodeURIComponent(guide.slug)}`;
+  const studioHref = hasTemplate
+    ? `/${params.locale}/studio?from=guide&slug=${encodeURIComponent(guide.slug)}&template_id=${encodeURIComponent(guide.template_id || '')}`
+    : `/${params.locale}/studio?from=guide&slug=${encodeURIComponent(guide.slug)}`;
   const checkHref = '#format-check';
   const valueModules = ((guide.sections as any)?.value_modules || []) as any[];
   const hasValueModules = Array.isArray(valueModules) && valueModules.some((m) => (m?.title || m?.md));
@@ -438,6 +441,14 @@ export default async function Page({ params }: { params: { locale: string; slug:
               className="inline-flex items-center rounded-md border border-cyan-700 px-3 py-2 text-sm font-medium text-cyan-800 hover:bg-cyan-50"
             >
               {isZh ? '检查格式' : 'Check formatting'}
+            </a>
+          ) : null}
+          {hasTemplate ? (
+            <a
+              href={studioHref}
+              className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            >
+              {isZh ? '在工作台预览/调参' : 'Open in Studio'}
             </a>
           ) : null}
           {isIntentOnly ? (
