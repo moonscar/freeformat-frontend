@@ -51,6 +51,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   const [currentGuideTitle, setCurrentGuideTitle] = React.useState<string>("");
   const [file, setFile] = React.useState<File | null>(null);
   const [lastUpload, setLastUpload] = React.useState<UploadResult | null>(null);
+  const [lastUploadKey, setLastUploadKey] = React.useState<string>("");
   const [uploading, setUploading] = React.useState(false);
   const [formatting, setFormatting] = React.useState(false);
   const [jobId, setJobId] = React.useState<string>("");
@@ -61,6 +62,8 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   const [previewError, setPreviewError] = React.useState<string>("");
   const previewRef = React.useRef<HTMLDivElement | null>(null);
   const previewedJobRef = React.useRef<string>("");
+  const [showSearch, setShowSearch] = React.useState(false);
+  const [hasSearched, setHasSearched] = React.useState(false);
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
@@ -84,6 +87,9 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
       score: "评分",
       confidence: "置信度",
       keyIssues: "关键问题",
+      popularTemplates: "热门模板",
+      searchMoreTemplates: "搜索更多模板",
+      hideSearch: "收起搜索",
     };
     const en: Record<string, string> = {
       selectTemplate: "Template",
@@ -106,6 +112,9 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
       score: "Score",
       confidence: "Confidence",
       keyIssues: "Key issues",
+      popularTemplates: "Popular templates",
+      searchMoreTemplates: "Search more templates",
+      hideSearch: "Hide search",
     };
     return (locale === "zh" ? zh : en)[s] || s;
   };
@@ -114,6 +123,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   const [searching, setSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string>("");
   const [searchResults, setSearchResults] = React.useState<GuideSearchItem[]>([]);
+  const [popularMetaBySlug, setPopularMetaBySlug] = React.useState<Record<string, GuideSearchItem>>({});
   const [lastRequestKey, setLastRequestKey] = React.useState<string>("");
   const [cooldownUntil, setCooldownUntil] = React.useState<number>(0);
 
@@ -127,29 +137,71 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   }, []);
 
   React.useEffect(() => {
-    // 默认尝试拉取一批推荐模板（无查询词），方便直接使用
-    void handleSearch();
-  }, []);
+    async function fetchPopularMeta() {
+      if (!popularGuides?.length) return;
+      const next: Record<string, GuideSearchItem> = {};
+      await Promise.all(
+        popularGuides.slice(0, 12).map(async (g) => {
+          try {
+            const res = await fetch(`${API_BASE}/guides/${g.slug}?locale=${locale}`);
+            if (!res.ok) return;
+            const j = await res.json();
+            let templateId = j.template_id || "";
+            let templateTier = j.template_tier || null;
+            let title = j.title || g.label;
+            let status = j.status || "active";
 
-  // Default selection: reduce the “pick a template first” friction by preselecting a recommended template.
+            // Fallback: if guide detail omits template fields, use search endpoint to hydrate them.
+            if (!templateId) {
+              try {
+                const params = new URLSearchParams();
+                params.set("locale", locale);
+                params.set("q", g.slug);
+                params.set("limit", "20");
+                const res2 = await fetch(`${API_BASE}/guides/search?${params.toString()}`);
+                if (res2.ok) {
+                  const js2 = (await res2.json()) as any[];
+                  const exact = (js2 || []).find((it) => it?.slug === g.slug);
+                  if (exact) {
+                    templateId = exact.template_id || templateId;
+                    templateTier = exact.template_tier || templateTier;
+                    title = exact.title || title;
+                    status = exact.status || status;
+                  }
+                }
+              } catch {}
+            }
+            next[g.slug] = {
+              slug: j.slug || g.slug,
+              locale: j.locale || locale,
+              title,
+              templateId,
+              templateTier,
+              status,
+            };
+          } catch {}
+        })
+      );
+      setPopularMetaBySlug(next);
+    }
+    void fetchPopularMeta();
+  }, [popularGuides, API_BASE, locale]);
+
+  // Default selection: preselect a recommended popular template to reduce friction.
   React.useEffect(() => {
     if (templateId) return;
     if (guideSlug) return; // from guide: respect incoming state
-    if (!searchResults.length) return;
+    if (!popularGuides?.length) return;
 
     const preferredSlug = locale === "zh" ? "ustc-edu" : "apa-org";
-    const preferred = searchResults.find((x) => x.slug === preferredSlug);
-    if (preferred) {
+    const preferred = popularMetaBySlug[preferredSlug];
+    if (preferred?.templateId) {
       handleSelectGuide(preferred);
       return;
     }
-    const gold = searchResults.find((x) => (x.templateTier || "").toLowerCase() === "gold");
-    if (gold) {
-      handleSelectGuide(gold);
-      return;
-    }
-    handleSelectGuide(searchResults[0]);
-  }, [searchResults, templateId, guideSlug, locale]);
+    const first = popularGuides.map((g) => popularMetaBySlug[g.slug]).find((x) => x?.templateId);
+    if (first) handleSelectGuide(first);
+  }, [templateId, guideSlug, locale, popularGuides, popularMetaBySlug]);
 
   React.useEffect(() => {
     // 若从指南页跳转且尚未有标题，尝试获取指南详情以展示名称
@@ -171,6 +223,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
 
   async function handleSearch(e?: React.FormEvent) {
     if (e) e.preventDefault();
+    setHasSearched(true);
     setSearching(true);
     setSearchError("");
     try {
@@ -204,6 +257,11 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   }
 
   async function selectPopularSlug(slug: string) {
+    const p = popularMetaBySlug[slug];
+    if (p?.templateId) {
+      handleSelectGuide(p);
+      return;
+    }
     const hit = searchResults.find((x) => x.slug === slug);
     if (hit) {
       handleSelectGuide(hit);
@@ -241,6 +299,40 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
     if (isDev) console.debug('[tool] select guide', item);
   }
 
+  function formatTierText(tier?: string | null) {
+    const t2 = (tier || "").toLowerCase();
+    if (!t2) return null;
+    const zhMap: Record<string, string> = { gold: "金", silver: "银", bronze: "铜" };
+    const enMap: Record<string, string> = { gold: "Gold", silver: "Silver", bronze: "Bronze" };
+    return locale === "zh" ? zhMap[t2] || tier : enMap[t2] || tier;
+  }
+
+  function formatTierBadge(tier?: string | null) {
+    const t2 = (tier || "").toLowerCase();
+    const label = formatTierText(tier);
+    if (!label) return null;
+
+    const cls =
+      t2 === "gold"
+        ? "bg-amber-500/10 text-amber-800 border border-amber-300"
+        : t2 === "silver"
+        ? "bg-slate-500/10 text-slate-800 border border-slate-300"
+        : t2 === "bronze"
+        ? "bg-orange-500/10 text-orange-800 border border-orange-300"
+        : "bg-slate-500/10 text-slate-800 border border-slate-300";
+    const icon = t2 === "gold" ? "★" : t2 === "silver" ? "◇" : "•";
+
+    return (
+      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+        {icon} {label}
+      </span>
+    );
+  }
+
+  function fileKey(f: File) {
+    return `${f.name}::${f.size}::${f.lastModified}`;
+  }
+
   async function handleUpload(): Promise<UploadResult> {
     if (!file) throw new Error(locale === "zh" ? "请先选择 .docx 文件" : "Please choose a .docx file first");
     const fd = new FormData();
@@ -261,6 +353,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
       const json = (await res.json()) as UploadResult;
       if (isDev) console.debug('[tool] upload <- OK', json);
       setLastUpload(json);
+      setLastUploadKey(fileKey(file));
       try {
         const ctx = {
           locale,
@@ -277,6 +370,13 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
     } finally {
       setUploading(false);
     }
+  }
+
+  async function ensureUpload(): Promise<UploadResult> {
+    if (lastUpload && file && lastUploadKey && lastUploadKey === fileKey(file)) {
+      return lastUpload;
+    }
+    return await handleUpload();
   }
 
   async function pollJob(id: string) {
@@ -408,7 +508,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
     setTimeout(() => setCooldownUntil(0), 3000);
     try {
       if (isDev) console.debug('[tool] start formatting', { templateId, guideSlug });
-      const up = await handleUpload();
+      const up = await ensureUpload();
       setFormatting(true);
       const body = { file_id: up.file_id, template_id: templateId } as any;
       const effectiveSlug = currentGuideSlug || guideSlug || "";
@@ -457,7 +557,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
     setCooldownUntil(nextCooldown);
     setTimeout(() => setCooldownUntil(0), 3000);
     try {
-      const up = await handleUpload();
+      const up = await ensureUpload();
       setChecking(true);
       const body: any = {
         file_id: up.file_id,
@@ -494,6 +594,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   const checkItems = Array.isArray(checkResult?.report?.items) ? (checkResult?.report?.items as CheckItem[]) : [];
   const actionable = checkItems.filter((it) => it.status === "fail" || it.status === "warn");
   const topIssues = actionable.slice(0, 8);
+  const popularLoading = !!popularGuides?.length && !templateId && Object.keys(popularMetaBySlug).length === 0;
 
   return (
     <div className="space-y-6">
@@ -504,7 +605,22 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
         </div>
         <div className="mt-1 text-xs text-slate-700">{t("youWillGet")}</div>
         <div className="mt-3 flex items-center gap-3">
-          <input type="file" accept=".docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <input
+            type="file"
+            accept=".docx"
+            onChange={(e) => {
+              const f = e.target.files?.[0] || null;
+              setFile(f);
+              // If user picks a new file, reuse of previous upload is no longer valid.
+              setLastUpload(null);
+              setLastUploadKey("");
+              setJobId("");
+              setJobStatus(null);
+              setCheckResult(null);
+              setPreviewError("");
+              setError("");
+            }}
+          />
           {file ? <span className="text-xs text-slate-600">{file.name}</span> : null}
         </div>
 
@@ -527,6 +643,58 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
           </button>
           {jobId ? <span className="text-xs text-slate-600">{t("job")}: {jobId}</span> : null}
         </div>
+
+        {/* Show result right under the action buttons (primary visibility) */}
+        {error ? (
+          <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {t("error")}: {error}
+          </div>
+        ) : null}
+        {jobStatus ? (
+          <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+            <div className="font-medium text-slate-900">{t("result")}</div>
+            <div className="mt-1 text-slate-700">status: {jobStatus.status}</div>
+            {jobStatus.result ? (
+              <div className="mt-2 flex flex-wrap items-center gap-4">
+                {jobStatus.result.formatted_doc_url ? (
+                  <a
+                    className="text-cyan-700 underline"
+                    href={resolveDocUrl(jobStatus.result.formatted_doc_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t("downloadDoc")}
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+            {jobStatus.error ? <div className="mt-1 text-rose-600">{jobStatus.error}</div> : null}
+
+            {jobStatus?.status === "succeeded" && jobStatus.result?.formatted_doc_url && lastUpload?.file_id ? (
+              <div className="mt-3">
+                <a
+                  className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  href={`/${locale}/studio?from=tool&slug=${encodeURIComponent(currentGuideSlug || guideSlug || "")}&template_id=${encodeURIComponent(templateId)}&file_id=${encodeURIComponent(lastUpload.file_id)}&filename=${encodeURIComponent(lastUpload.filename || "")}&file_url=${encodeURIComponent(lastUpload.url || "")}&formatted_doc_url=${encodeURIComponent(jobStatus.result.formatted_doc_url || "")}&docjson_url=${encodeURIComponent(jobStatus.result.format_map_url || "")}`}
+                >
+                  {locale === "zh" ? "在工作台继续微调（Studio）" : "Open in Studio to fine-tune"}
+                </a>
+                <div className="mt-1 text-xs text-slate-600">
+                  {locale === "zh" ? "会带上当前模板与上传文件上下文。" : "Keeps the same template and upload context."}
+                </div>
+              </div>
+            ) : null}
+
+            {jobStatus?.status === 'succeeded' && jobStatus.result?.formatted_doc_url ? (
+              <div className="mt-4">
+                <div className="mb-2 text-sm font-medium text-slate-900">{locale === 'zh' ? '预览' : 'Preview'}</div>
+                {previewError ? (
+                  <div className="mb-2 text-xs text-rose-600">{previewError}</div>
+                ) : null}
+                <div ref={previewRef} className="docx-container overflow-auto rounded-md border p-3"></div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       {/* Check output (evidence) */}
@@ -600,6 +768,10 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
                 {currentGuideTitle || currentGuideSlug || guideSlug || (locale === 'zh' ? '（未命名指南）' : '(unnamed guide)')}
               </span>
             </>
+          ) : popularLoading ? (
+            <span className="text-slate-600">
+              {locale === "zh" ? "正在加载推荐模板…" : "Loading recommended templates…"}
+            </span>
           ) : (
             <span className="text-rose-600">{t("noTemplate")}</span>
           )}
@@ -607,137 +779,93 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
         {popularGuides?.length ? (
           <div className="mt-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {locale === "zh" ? "热门模板" : "Popular templates"}
+              {t("popularTemplates")}
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {popularGuides.slice(0, 10).map((g) => (
-                <button
-                  key={g.slug}
-                  type="button"
-                  onClick={() => selectPopularSlug(g.slug)}
-                  className="rounded-full border bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50"
-                >
-                  {g.label}
-                </button>
-              ))}
+              {popularGuides.slice(0, 10).map((g) => {
+                const meta = popularMetaBySlug[g.slug] || searchResults.find((x) => x.slug === g.slug);
+                const selected = g.slug === (currentGuideSlug || guideSlug);
+                return (
+                  <button
+                    key={g.slug}
+                    type="button"
+                    onClick={() => selectPopularSlug(g.slug)}
+                    className={`inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50 ${
+                      selected ? "border-cyan-500 bg-cyan-50" : ""
+                    }`}
+                  >
+                    <span className="max-w-[210px] truncate">{g.label}</span>
+                    {formatTierBadge(meta?.templateTier)}
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : null}
-        <form onSubmit={handleSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={locale === 'zh' ? '搜索指南或学校名称，例如：APA，USTC' : 'Search guide or institution, e.g. APA, USTC'}
-            className="flex-1 rounded-md border px-2 py-1 text-sm"
-          />
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
-            type="submit"
-            disabled={searching}
-            className={`rounded-md px-3 py-1 text-sm text-white ${searching ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
+            type="button"
+            onClick={() => setShowSearch((v) => !v)}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
           >
-            {searching ? (locale === 'zh' ? '搜索中…' : 'Searching…') : (locale === 'zh' ? '搜索' : 'Search')}
+            {showSearch ? t("hideSearch") : t("searchMoreTemplates")}
           </button>
-        </form>
-        {searchError ? (
-          <div className="mt-1 text-xs text-rose-600">{searchError}</div>
-        ) : null}
-        {searchResults.length > 0 ? (
-          <div className="mt-3 max-h-48 space-y-1 overflow-auto text-sm">
-            {searchResults.map((item) => {
-              const selected = item.slug === (currentGuideSlug || guideSlug);
-              const tier = (item.templateTier || "bronze").toLowerCase();
-              const tierLabel =
-                tier === "gold"
-                  ? locale === "zh"
-                    ? "★ Gold 模板"
-                    : "★ Gold template"
-                  : tier === "silver"
-                  ? locale === "zh"
-                    ? "◇ Silver 模板"
-                    : "◇ Silver template"
-                  : locale === "zh"
-                  ? "• Bronze 模板"
-                  : "• Bronze template";
-              const tierClass =
-                tier === "gold"
-                  ? "bg-amber-500/10 text-amber-800 border border-amber-300"
-                  : tier === "silver"
-                  ? "bg-slate-500/10 text-slate-800 border border-slate-300"
-                  : "bg-orange-500/10 text-orange-800 border border-orange-300";
-              return (
-                <button
-                  key={`${item.slug}-${item.locale}`}
-                  type="button"
-                  onClick={() => handleSelectGuide(item)}
-                  className={`flex w-full items-center justify-between rounded border px-2 py-1 text-left ${
-                    selected ? 'border-cyan-500 bg-cyan-50' : 'hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="flex flex-col items-start gap-1">
-                    <span className="flex items-center gap-2">
-                      <span className="font-medium text-slate-900">{item.title || item.slug}</span>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${tierClass}`}
-                      >
-                        {tierLabel}
+          {searching ? <span className="text-xs text-slate-600">{locale === "zh" ? "搜索中…" : "Searching…"}</span> : null}
+        </div>
+
+        {showSearch ? (
+          <>
+            <form onSubmit={handleSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={locale === 'zh' ? '搜索指南或学校名称，例如：APA，USTC' : 'Search guide or institution, e.g. APA, USTC'}
+                className="flex-1 rounded-md border px-2 py-1 text-sm"
+              />
+              <button
+                type="submit"
+                disabled={searching}
+                className={`rounded-md px-3 py-1 text-sm text-white ${searching ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
+              >
+                {searching ? (locale === 'zh' ? '搜索中…' : 'Searching…') : (locale === 'zh' ? '搜索' : 'Search')}
+              </button>
+            </form>
+            {searchError ? (
+              <div className="mt-1 text-xs text-rose-600">{searchError}</div>
+            ) : null}
+            {hasSearched && searchResults.length > 0 ? (
+              <div className="mt-3 max-h-48 space-y-1 overflow-auto text-sm">
+                {searchResults.map((item) => {
+                  const selected = item.slug === (currentGuideSlug || guideSlug);
+                  return (
+                    <button
+                      key={`${item.slug}-${item.locale}`}
+                      type="button"
+                      onClick={() => handleSelectGuide(item)}
+                      className={`flex w-full items-center justify-between rounded border px-2 py-1 text-left ${
+                        selected ? 'border-cyan-500 bg-cyan-50' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="flex flex-col items-start gap-1">
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium text-slate-900">{item.title || item.slug}</span>
+                          {formatTierBadge(item.templateTier || "bronze")}
+                        </span>
+                        <span className="font-mono text-[11px] text-slate-500">{item.slug}</span>
                       </span>
-                    </span>
-                    <span className="font-mono text-[11px] text-slate-500">{item.slug}</span>
-                  </span>
-                  {selected ? (
-                    <span className="text-xs text-cyan-700">
-                      {locale === 'zh' ? '已选择' : 'Selected'}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
+                      {selected ? (
+                        <span className="text-xs text-cyan-700">{locale === 'zh' ? '已选择' : 'Selected'}</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </section>
-
-      {/* Status */}
-      {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{t("error")}: {error}</div>
-      ) : null}
-      {jobStatus ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-          <div className="font-medium text-slate-900">{t("result")}</div>
-          <div className="mt-1 text-slate-700">status: {jobStatus.status}</div>
-          {jobStatus.result ? (
-            <div className="mt-2 flex items-center gap-4">
-              {jobStatus.result.formatted_doc_url ? (
-                <a className="text-cyan-700 underline" href={resolveDocUrl(jobStatus.result.formatted_doc_url)} target="_blank" rel="noopener noreferrer">{t("downloadDoc")}</a>
-              ) : null}
-              {/* No format map download per requirement */}
-            </div>
-          ) : null}
-          {jobStatus.error ? <div className="mt-1 text-rose-600">{jobStatus.error}</div> : null}
-          {jobStatus?.status === "succeeded" && jobStatus.result?.formatted_doc_url ? (
-            <div className="mt-3">
-              <a
-                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                href={`/${locale}/studio?from=tool&slug=${encodeURIComponent(currentGuideSlug || guideSlug || "")}&template_id=${encodeURIComponent(templateId)}&file_id=${encodeURIComponent(lastUpload?.file_id || "")}&filename=${encodeURIComponent(lastUpload?.filename || "")}&file_url=${encodeURIComponent(lastUpload?.url || "")}&formatted_doc_url=${encodeURIComponent(jobStatus.result.formatted_doc_url || "")}&docjson_url=${encodeURIComponent(jobStatus.result.format_map_url || "")}`}
-              >
-                {locale === "zh" ? "在工作台继续微调（Studio）" : "Open in Studio to fine-tune"}
-              </a>
-              <div className="mt-1 text-xs text-slate-600">
-                {locale === "zh" ? "会带上当前模板与上传文件上下文。" : "Keeps the same template and upload context."}
-              </div>
-            </div>
-          ) : null}
-          {jobStatus?.status === 'succeeded' && jobStatus.result?.formatted_doc_url ? (
-            <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-slate-900">{locale === 'zh' ? '预览' : 'Preview'}</div>
-              {previewError ? (
-                <div className="mb-2 text-xs text-rose-600">{previewError}</div>
-              ) : null}
-              <div ref={previewRef} className="docx-container overflow-auto rounded-md border p-3"></div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
