@@ -2,7 +2,15 @@ import type { MetadataRoute } from 'next';
 import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { siteConfig } from '@/lib/siteConfig';
 
-type GuideItem = { slug: string; locale: string; guide_type?: string | null };
+type GuideItem = {
+  slug: string;
+  locale: string;
+  guide_type?: string | null;
+  template_id?: string | null;
+  status?: string | null;
+  isIntentOnly?: boolean | null;
+  meta?: { guide_mode?: string | null } | null;
+};
 
 const SITEMAP_EXCLUDE_BY_LOCALE: Record<string, Set<string>> = {
   en: new Set(["proquest", "ucl-edu", "apa-format"]),
@@ -19,7 +27,19 @@ async function fetchGuides(locale: string): Promise<GuideItem[]> {
     if (!res.ok) return [];
     const items = (await res.json()) as GuideItem[];
     const exclude = SITEMAP_EXCLUDE_BY_LOCALE[locale] || new Set<string>();
-    return items.filter((g) => !exclude.has(g.slug));
+    return items
+      .filter((g) => !!g?.slug && !exclude.has(g.slug))
+      .filter((g) => {
+        const status = String(g.status || '').toLowerCase();
+        // Keep sitemap lean: only include published/active items.
+        if (status && status !== 'active') return false;
+        const guideMode = String(g.meta?.guide_mode || '').toLowerCase();
+        if (g.isIntentOnly || guideMode === 'intent_only') return false;
+        // For non-topic guides, require template_id (otherwise treat as not-ready / thin).
+        const t = String(g.guide_type || '').toLowerCase();
+        if (t === 'topic') return true;
+        return !!g.template_id;
+      });
   } catch {
     return [];
   }

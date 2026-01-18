@@ -5,6 +5,16 @@ const PUBLIC_FILE = /\.(.*)$/;
 const DEFAULT_LOCALE = 'zh';
 const SUPPORTED_LOCALES = ['zh', 'en'] as const;
 
+function getCanonicalHost(): string | null {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || '';
+  if (!raw) return null;
+  try {
+    return new URL(raw).host;
+  } catch {
+    return null;
+  }
+}
+
 function detectPreferredLocale(request: NextRequest): (typeof SUPPORTED_LOCALES)[number] {
   const header = request.headers.get('accept-language');
   if (!header) return DEFAULT_LOCALE;
@@ -23,6 +33,26 @@ function detectPreferredLocale(request: NextRequest): (typeof SUPPORTED_LOCALES)
 }
 
 export function middleware(request: NextRequest) {
+  // P0: Enforce a single canonical host (non-www or www, based on NEXT_PUBLIC_SITE_URL).
+  // Do not enforce in local dev (localhost) to avoid breaking DX.
+  const canonicalHost = getCanonicalHost();
+  const requestHost =
+    request.headers.get('x-forwarded-host') ||
+    request.headers.get('host') ||
+    request.nextUrl.host;
+  if (
+    process.env.NODE_ENV === 'production' &&
+    canonicalHost &&
+    requestHost &&
+    !requestHost.includes('localhost') &&
+    !requestHost.includes('127.0.0.1') &&
+    requestHost !== canonicalHost
+  ) {
+    const url = request.nextUrl.clone();
+    url.host = canonicalHost;
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl;
   if (
     pathname.startsWith('/_next') ||
