@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import HeroSection from '@/components/layout/HeroSection';
 import Footer from '@/components/layout/Footer';
@@ -116,7 +115,7 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
           </div>
         </section>
 
-        <section className="rounded-2xl border border-dashed p-6 text-slate-700">
+        <section id="tool-workarea" className="rounded-2xl border border-dashed p-6 text-slate-700">
         {isFromGuide ? (
           <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -143,7 +142,12 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
               </div>
             </div>
           ) : null}
-          <ToolWorkArea locale={locale as any} guideSlug={guideSlug} initialTemplateId={templateId} />
+          <ToolWorkArea
+            locale={locale as any}
+            guideSlug={guideSlug}
+            initialTemplateId={templateId}
+            popularGuides={popularGuides}
+          />
         </section>
 
         {/* Taskified scope: what we fix vs. what you do in Word */}
@@ -189,32 +193,6 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
           use={info.use}
           subheads={info.subheads}
         />
-
-        {/* Popular guides just above FAQ */}
-        <section id="popular" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-xl font-semibold text-slate-900">
-            {isZh ? '热门指南与模板（快速开始）' : 'Popular guides & templates (quick start)'}
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            {isZh
-              ? '如果你需要按学校论文格式或常见规范排版，可以先从这些指南开始：'
-              : 'If you need a ready-to-use thesis/Word template, start from these guides:'}
-          </p>
-          <ul className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-            {popularGuides.map((g) => (
-              <li key={g.slug}>
-                <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/guides/${g.slug}`}>
-                  {g.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 text-sm">
-            <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/guides`}>
-              {isZh ? '查看全部指南' : 'Browse all guides'}
-            </Link>
-          </div>
-        </section>
 
         <div id="faq" className="mt-10">
           <FAQ title={info.faq.title} items={info.faq.items} />

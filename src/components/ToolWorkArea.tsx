@@ -6,6 +6,7 @@ type Props = {
   locale: "en" | "zh";
   guideSlug?: string;
   initialTemplateId?: string;
+  popularGuides?: Array<{ slug: string; label: string }>;
 };
 
 type UploadResult = { file_id: string; filename: string; url: string };
@@ -43,12 +44,13 @@ type CheckResponse = {
   docjson_url?: string | null;
 };
 
-export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: Props) {
+export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, popularGuides }: Props) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/$/, '');
   const [templateId, setTemplateId] = React.useState<string>(initialTemplateId || "");
   const [currentGuideSlug, setCurrentGuideSlug] = React.useState<string>(guideSlug || "");
   const [currentGuideTitle, setCurrentGuideTitle] = React.useState<string>("");
   const [file, setFile] = React.useState<File | null>(null);
+  const [lastUpload, setLastUpload] = React.useState<UploadResult | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [formatting, setFormatting] = React.useState(false);
   const [jobId, setJobId] = React.useState<string>("");
@@ -201,6 +203,36 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
     }
   }
 
+  async function selectPopularSlug(slug: string) {
+    const hit = searchResults.find((x) => x.slug === slug);
+    if (hit) {
+      handleSelectGuide(hit);
+      return;
+    }
+    // Fallback: run a quick search by slug; if found, select it.
+    try {
+      const params = new URLSearchParams();
+      params.set("locale", locale);
+      params.set("q", slug);
+      params.set("limit", "20");
+      const url = `${API_BASE}/guides/search?${params.toString()}`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const js = (await res.json()) as any[];
+      const items: GuideSearchItem[] = (js || []).map((it) => ({
+        slug: it.slug,
+        locale: it.locale,
+        title: it.title,
+        templateId: it.template_id,
+        templateTier: it.template_tier,
+        status: it.status,
+      }));
+      setSearchResults(items);
+      const exact = items.find((x) => x.slug === slug);
+      if (exact) handleSelectGuide(exact);
+    } catch {}
+  }
+
   function handleSelectGuide(item: GuideSearchItem) {
     setTemplateId(item.templateId);
     setCurrentGuideSlug(item.slug);
@@ -228,6 +260,19 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       }
       const json = (await res.json()) as UploadResult;
       if (isDev) console.debug('[tool] upload <- OK', json);
+      setLastUpload(json);
+      try {
+        const ctx = {
+          locale,
+          template_id: templateId,
+          guide_slug: currentGuideSlug || guideSlug || "",
+          file_id: json.file_id,
+          filename: json.filename,
+          file_url: json.url,
+          created_at: new Date().toISOString(),
+        };
+        sessionStorage.setItem("ff_studio_ctx_v1", JSON.stringify(ctx));
+      } catch {}
       return json;
     } finally {
       setUploading(false);
@@ -243,6 +288,22 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
       const js = (await r.json()) as JobStatus;
       setJobStatus(js);
       if (isDev) console.debug('[tool] job <-', js);
+      if (js.status === "succeeded" && js.result) {
+        try {
+          const raw = sessionStorage.getItem("ff_studio_ctx_v1");
+          const prev = raw ? JSON.parse(raw) : {};
+          const next = {
+            ...prev,
+            locale,
+            template_id: templateId,
+            guide_slug: currentGuideSlug || guideSlug || prev?.guide_slug || "",
+            formatted_doc_url: js.result.formatted_doc_url,
+            format_map_url: js.result.format_map_url,
+            updated_at: new Date().toISOString(),
+          };
+          sessionStorage.setItem("ff_studio_ctx_v1", JSON.stringify(next));
+        } catch {}
+      }
       // trigger preview on success
       if (js.status === "succeeded" && js.result?.formatted_doc_url) {
         if (previewedJobRef.current !== js.job_id) {
@@ -543,6 +604,25 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
             <span className="text-rose-600">{t("noTemplate")}</span>
           )}
         </div>
+        {popularGuides?.length ? (
+          <div className="mt-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {locale === "zh" ? "热门模板" : "Popular templates"}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {popularGuides.slice(0, 10).map((g) => (
+                <button
+                  key={g.slug}
+                  type="button"
+                  onClick={() => selectPopularSlug(g.slug)}
+                  className="rounded-full border bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <form onSubmit={handleSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             type="text"
@@ -634,6 +714,19 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId }: P
             </div>
           ) : null}
           {jobStatus.error ? <div className="mt-1 text-rose-600">{jobStatus.error}</div> : null}
+          {jobStatus?.status === "succeeded" && jobStatus.result?.formatted_doc_url ? (
+            <div className="mt-3">
+              <a
+                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                href={`/${locale}/studio?from=tool&slug=${encodeURIComponent(currentGuideSlug || guideSlug || "")}&template_id=${encodeURIComponent(templateId)}&file_id=${encodeURIComponent(lastUpload?.file_id || "")}&filename=${encodeURIComponent(lastUpload?.filename || "")}&file_url=${encodeURIComponent(lastUpload?.url || "")}&formatted_doc_url=${encodeURIComponent(jobStatus.result.formatted_doc_url || "")}&docjson_url=${encodeURIComponent(jobStatus.result.format_map_url || "")}`}
+              >
+                {locale === "zh" ? "在工作台继续微调（Studio）" : "Open in Studio to fine-tune"}
+              </a>
+              <div className="mt-1 text-xs text-slate-600">
+                {locale === "zh" ? "会带上当前模板与上传文件上下文。" : "Keeps the same template and upload context."}
+              </div>
+            </div>
+          ) : null}
           {jobStatus?.status === 'succeeded' && jobStatus.result?.formatted_doc_url ? (
             <div className="mt-4">
               <div className="mb-2 text-sm font-medium text-slate-900">{locale === 'zh' ? '预览' : 'Preview'}</div>
