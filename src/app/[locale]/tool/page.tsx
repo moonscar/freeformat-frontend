@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import HeroSection from '@/components/layout/HeroSection';
 import Footer from '@/components/layout/Footer';
@@ -197,6 +198,32 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         <div id="faq" className="mt-10">
           <FAQ title={info.faq.title} items={info.faq.items} />
         </div>
+
+        {/* Internal links: popular guides (SEO / navigation) */}
+        <section id="popular-guides" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-semibold text-slate-900">
+            {isZh ? '热门指南' : 'Popular guides'}
+          </h2>
+          <p className="mt-2 text-sm text-slate-600">
+            {isZh
+              ? '常用模板与学校论文格式的快速入口：'
+              : 'Quick links to commonly used templates and thesis formats:'}
+          </p>
+          <ul className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+            {popularGuides.map((g) => (
+              <li key={g.slug}>
+                <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/guides/${g.slug}`}>
+                  {g.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 text-sm">
+            <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/guides`}>
+              {isZh ? '查看全部指南' : 'Browse all guides'}
+            </Link>
+          </div>
+        </section>
       </main>
       <Footer locale={locale} />
     </>
