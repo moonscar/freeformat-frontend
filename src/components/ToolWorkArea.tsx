@@ -64,6 +64,7 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
   const previewedJobRef = React.useRef<string>("");
   const [showSearch, setShowSearch] = React.useState(false);
   const [hasSearched, setHasSearched] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const t = (s: string) => {
     const zh: Record<string, string> = {
@@ -90,6 +91,9 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
       popularTemplates: "热门模板",
       searchMoreTemplates: "搜索更多模板",
       hideSearch: "收起搜索",
+      chooseDoc: "选择 .docx 文件",
+      replace: "替换",
+      remove: "移除",
     };
     const en: Record<string, string> = {
       selectTemplate: "Template",
@@ -115,6 +119,9 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
       popularTemplates: "Popular templates",
       searchMoreTemplates: "Search more templates",
       hideSearch: "Hide search",
+      chooseDoc: "Choose a .docx file",
+      replace: "Replace",
+      remove: "Remove",
     };
     return (locale === "zh" ? zh : en)[s] || s;
   };
@@ -604,10 +611,12 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
           {locale === "zh" ? "上传 → 检查 → 格式化" : "Upload → Check → Format"}
         </div>
         <div className="mt-1 text-xs text-slate-700">{t("youWillGet")}</div>
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <input
+            ref={fileInputRef}
             type="file"
             accept=".docx"
+            className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0] || null;
               setFile(f);
@@ -621,7 +630,36 @@ export default function ToolWorkArea({ locale, guideSlug, initialTemplateId, pop
               setError("");
             }}
           />
-          {file ? <span className="text-xs text-slate-600">{file.name}</span> : null}
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          >
+            {file ? t("replace") : t("chooseDoc")}
+          </button>
+          {file ? (
+            <>
+              <span className="text-xs text-slate-600">{file.name}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  setLastUpload(null);
+                  setLastUploadKey("");
+                  setJobId("");
+                  setJobStatus(null);
+                  setCheckResult(null);
+                  setPreviewError("");
+                  setError("");
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                {t("remove")}
+              </button>
+            </>
+          ) : null}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
