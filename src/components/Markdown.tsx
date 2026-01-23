@@ -31,12 +31,16 @@ function linkifyPlainUrls(escaped: string) {
 
 function inlineMdToHtml(rawText: string) {
   const linkTokens: string[] = [];
-  const tokenized = rawText.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => {
+  const tokenized = rawText.replace(/\[([^\]]+)\]\(((?:https?:\/\/|\/|#)[^\s)]+)\)/g, (_, label, url) => {
     const idx = linkTokens.length;
     const safeLabel = escapeHtml(String(label));
-    const safeUrl = escapeHtml(String(url));
+    const urlRaw = String(url);
+    const safeUrl = escapeHtml(urlRaw);
+    const isExternal = /^https?:\/\//.test(urlRaw);
     linkTokens.push(
-      `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:text-cyan-900 underline">${safeLabel}</a>`
+      isExternal
+        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:text-cyan-900 underline">${safeLabel}</a>`
+        : `<a href="${safeUrl}" class="text-cyan-700 hover:text-cyan-900 underline">${safeLabel}</a>`
     );
     return `@@LINK${idx}@@`;
   });
