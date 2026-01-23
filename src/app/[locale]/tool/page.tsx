@@ -72,6 +72,15 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         { slug: 'harvard-edu', label: 'Harvard GSAS (dissertation format)' },
         { slug: 'stanford-edu', label: 'Stanford (thesis/dissertation)' },
       ];
+
+  const popularTopics = isZh
+    ? [
+        { slug: 'thesis-front-matter-cover-abstract-toc', label: '封面、摘要与目录（本科毕业论文）' },
+        { slug: 'thesis-headings-and-body-style', label: '标题层级与正文样式（本科毕业论文）' },
+        { slug: 'thesis-pagination-and-section-breaks', label: '页码与分节（本科毕业论文）' },
+        { slug: 'thesis-figures-tables-and-captions', label: '图表与题注（本科毕业论文）' },
+      ]
+    : [];
   return (
     <>
       {adsEnabled && adsClient ? (
@@ -198,6 +207,34 @@ export default function ToolPage({ params, searchParams }: { params: { locale: s
         <div id="faq" className="mt-10">
           <FAQ title={info.faq.title} items={info.faq.items} />
         </div>
+
+        {/* Internal links: topics (SEO / navigation) */}
+        <section id="topics" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-semibold text-slate-900">{isZh ? '排版专题' : 'Topics'}</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            {isZh ? '围绕高意图排版问题的教程与清单：' : 'Tutorials and checklists for high-intent formatting problems:'}
+          </p>
+          {popularTopics.length ? (
+            <ul className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+              {popularTopics.map((t0) => (
+                <li key={t0.slug}>
+                  <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/topics/${t0.slug}`}>
+                    {t0.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-4 text-sm text-slate-600">
+              {isZh ? '更多专题整理中。' : 'More topics coming soon.'}
+            </div>
+          )}
+          <div className="mt-4 text-sm">
+            <Link className="text-cyan-700 underline hover:text-cyan-900" href={`/${locale}/topics`}>
+              {isZh ? '查看全部专题' : 'Browse all topics'}
+            </Link>
+          </div>
+        </section>
 
         {/* Internal links: popular guides (SEO / navigation) */}
         <section id="popular-guides" className="mt-10 rounded-2xl border border-slate-200 bg-white p-6">
