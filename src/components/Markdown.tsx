@@ -13,11 +13,20 @@ function escapeHtml(s: string) {
 }
 
 function linkifyPlainUrls(escaped: string) {
-  return escaped.replace(
+  // External URLs (open in new tab)
+  let s = escaped.replace(
     /(https?:\/\/[\w\-._~:/?#\[\]@!$&'()*+,;=%]+)/g,
     (m) =>
       `<a href="${m}" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:text-cyan-900 underline">${m}</a>`
   );
+
+  // Internal absolute paths (clickable, same tab)
+  s = s.replace(
+    /(\/(?:en|zh)\/[A-Za-z0-9\-._~\/?#=&%]+)/g,
+    (m) => `<a href="${m}" class="text-cyan-700 hover:text-cyan-900 underline">${m}</a>`
+  );
+
+  return s;
 }
 
 function inlineMdToHtml(rawText: string) {

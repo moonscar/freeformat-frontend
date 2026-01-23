@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { permanentRedirect } from 'next/navigation';
 import Markdown from '@/components/Markdown';
 import ValueModules from '@/components/ValueModules';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 type Guide = {
   slug: string;
@@ -71,10 +73,14 @@ export default async function TopicPage({ params }: { params: { locale: string; 
 
   if (!g) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="text-2xl font-semibold">{isZh ? '未找到专题' : 'Topic Not Found'}</h1>
-        <p className="mt-2 text-slate-600">{isZh ? '请检查链接或稍后重试。' : 'Please check the link or try again later.'}</p>
-      </main>
+      <>
+        <Header locale={locale} />
+        <main className="mx-auto max-w-3xl px-4 py-10">
+          <h1 className="text-2xl font-semibold">{isZh ? '未找到专题' : 'Topic Not Found'}</h1>
+          <p className="mt-2 text-slate-600">{isZh ? '请检查链接或稍后重试。' : 'Please check the link or try again later.'}</p>
+        </main>
+        <Footer locale={locale} />
+      </>
     );
   }
 
@@ -89,33 +95,36 @@ export default async function TopicPage({ params }: { params: { locale: string; 
   const hasValueModules = Array.isArray(valueModules) && valueModules.some((m) => (m?.title || m?.md));
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-slate-900">{g.title || g.slug}</h1>
-        {g.meta_desc ? <p className="mt-2 text-slate-600">{g.meta_desc}</p> : null}
-      </div>
+    <>
+      <Header locale={locale} />
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-slate-900">{g.title || g.slug}</h1>
+          {g.meta_desc ? <p className="mt-2 text-slate-600">{g.meta_desc}</p> : null}
+        </div>
 
-      {hasValueModules ? (
-        <section className="mb-10">
-          <ValueModules locale={locale} modules={valueModules} />
-        </section>
-      ) : null}
+        {hasValueModules ? (
+          <section className="mb-10">
+            <ValueModules locale={locale} modules={valueModules} />
+          </section>
+        ) : null}
 
-      {blocks.length ? (
-        <article className="space-y-10">
-          {blocks.map((b, idx) => (
-            <section key={idx}>
-              {b.title ? <h2 className="mb-3 text-2xl font-semibold text-slate-900">{b.title}</h2> : null}
-              {b.md ? <Markdown md={b.md} /> : null}
-            </section>
-          ))}
-        </article>
-      ) : (
-        <div className="rounded border p-4 text-sm text-slate-600">{isZh ? '暂无内容。' : 'No content yet.'}</div>
-      )}
-    </main>
+        {blocks.length ? (
+          <article className="space-y-10">
+            {blocks.map((b, idx) => (
+              <section key={idx}>
+                {b.title ? <h2 className="mb-3 text-2xl font-semibold text-slate-900">{b.title}</h2> : null}
+                {b.md ? <Markdown md={b.md} /> : null}
+              </section>
+            ))}
+          </article>
+        ) : (
+          <div className="rounded border p-4 text-sm text-slate-600">{isZh ? '暂无内容。' : 'No content yet.'}</div>
+        )}
+      </main>
+      <Footer locale={locale} />
+    </>
   );
 }
 
 export const revalidate = 300;
-
