@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { siteConfig } from '@/lib/siteConfig';
 
 type GuideItem = {
@@ -9,8 +8,13 @@ type GuideItem = {
   template_id?: string | null;
   status?: string | null;
   isIntentOnly?: boolean | null;
+  updated_at?: string | null;
+  updatedAt?: string | null;
   meta?: { guide_mode?: string | null } | null;
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const SITEMAP_EXCLUDE_BY_LOCALE: Record<string, Set<string>> = {
   en: new Set(["proquest", "ucl-edu", "apa-format"]),
@@ -18,9 +22,6 @@ const SITEMAP_EXCLUDE_BY_LOCALE: Record<string, Set<string>> = {
 };
 
 async function fetchGuides(locale: string): Promise<GuideItem[]> {
-  // Avoid network fetch during `next build` (build sandbox / no backend running).
-  // In that case we fall back to a minimal sitemap containing only static pages.
-  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) return [];
   const api = (process.env.NEXT_PUBLIC_API_BASE || process.env.API_PROXY_TARGET || `${siteConfig.url.replace(/\/$/, '')}/api`).replace(/\/$/, '');
   try {
     const res = await fetch(`${api}/guides?locale=${encodeURIComponent(locale)}&limit=500`, { next: { revalidate: 300 } });
@@ -58,18 +59,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const g of items) {
       const t = String(g.guide_type || '').toLowerCase();
       if (t === 'topic') {
+        const itemLastModified = g.updated_at || g.updatedAt;
         topicEntries.push({
           url: `${baseUrl}/${locale}/topics/${g.slug}`,
           changeFrequency: 'weekly' as const,
-          priority: 0.7,
-          lastModified: new Date(),
+          priority: 0.85,
+          lastModified: itemLastModified ? new Date(itemLastModified) : new Date(),
         });
       } else {
+        const itemLastModified = g.updated_at || g.updatedAt;
         guideEntries.push({
           url: `${baseUrl}/${locale}/guides/${g.slug}`,
-          changeFrequency: 'weekly' as const,
-          priority: 0.8,
-          lastModified: new Date(),
+          changeFrequency: 'monthly' as const,
+          priority: 0.45,
+          lastModified: itemLastModified ? new Date(itemLastModified) : new Date(),
         });
       }
     }
@@ -78,14 +81,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.flatMap((path) =>
     locales.map((locale) => ({
       url: `${baseUrl}/${locale}${path}`,
-      changeFrequency: 'weekly' as const,
+      changeFrequency:
+        path === '/topics'
+          ? ('weekly' as const)
+          : path === '/guides'
+          ? ('monthly' as const)
+          : ('weekly' as const),
       priority:
         path === ''
           ? 1
           : path === '/tool'
           ? 0.9
+          : path === '/topics'
+          ? 0.8
           : path === '/guides'
-          ? 0.7
+          ? 0.45
           : path === '/feedback'
           ? 0.4
           : path === '/landing'
